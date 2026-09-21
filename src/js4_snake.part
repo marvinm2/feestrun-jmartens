@@ -1,0 +1,62 @@
+
+/* ================= MODE: SNAKE (Ballonnenslang) ================= */
+const Snake=(()=>{
+  const SN={cells:[],prev:[],dir:{x:1,y:0},queue:[],timer:0,speed:13,grow:0,food:null,pins:[],coin:null,coinT:0,kassa:null,top:2};
+  const SNCOL=['#FCB900','#8ED1FC','#7BDCB5','#9B51E0','#F78DA7','#FF6B6B'];
+  const speedFor=()=>Math.max(9,13-Math.floor(collected/3));
+  const cellFree=(x,y,margin)=>{ if(x<0||x>=COLS||y<SN.top||y>=ROWS) return false; if(SN.cells.some(c=>Math.abs(c.x-x)<=margin&&Math.abs(c.y-y)<=margin)) return false; if(SN.pins.some(p=>p.x===x&&p.y===y)) return false; if(SN.food&&SN.food.x===x&&SN.food.y===y) return false; if(SN.coin&&SN.coin.x===x&&SN.coin.y===y) return false; if(SN.kassa&&x>=SN.kassa.x&&x<SN.kassa.x+2&&y>=SN.kassa.y&&y<SN.kassa.y+2) return false; return true; };
+  function randFree(margin){ for(let k=0;k<400;k++){ const x=1+Math.floor(Math.random()*(COLS-2)), y=SN.top+1+Math.floor(Math.random()*(ROWS-SN.top-2)); if(cellFree(x,y,margin)) return {x,y}; } return null; }
+  function resetSnake(full){ SN.cells=[{x:8,y:9},{x:7,y:9},{x:6,y:9}]; SN.prev=SN.cells.map(c=>({...c})); SN.dir={x:1,y:0}; SN.queue=[]; SN.timer=0; SN.grow=0; SN.coin=null; SN.coinT=0;
+    if(full){ SN.pins=[]; SN.food=null; SN.kassa=null; } else { SN.pins=SN.pins.filter(p=>Math.abs(p.x-8)>4||Math.abs(p.y-9)>2); }
+    SN.speed=speedFor(); if(!SN.food&&!SN.kassa&&collected<tot.items) spawnFood(); }
+  function spawnFood(){ const it=nextItem(); if(!it){ SN.food=null; return; } const c=randFree(2); if(c) SN.food={x:c.x,y:c.y,i:it.i,ph:Math.random()*6}; }
+  function turn(rot){ const d=SN.queue.length?SN.queue[SN.queue.length-1]:SN.dir; SN.queue.push(rot>0?{x:-d.y,y:d.x}:{x:d.y,y:-d.x}); if(SN.queue.length>3) SN.queue.shift(); }
+  function setDir(x,y){ const d=SN.queue.length?SN.queue[SN.queue.length-1]:SN.dir; if((d.x===-x&&d.y===-y)||(d.x===x&&d.y===y)) return; SN.queue.push({x,y}); if(SN.queue.length>3) SN.queue.shift(); }
+  const headPx=()=>({x:SN.cells[0].x*T+16,y:SN.cells[0].y*T+16});
+  function step(){
+    if(deadT){ afterDeath(); return; }
+    if(!SN.coin){ SN.coinT++; if(SN.coinT>300){ const c=randFree(1); if(c){ SN.coin={x:c.x,y:c.y,ph:0}; SN.coinT=0; } } }
+    SN.timer++; if(SN.timer<SN.speed) return; SN.timer=0;
+    if(SN.queue.length){ const d=SN.queue.shift(); if(!(d.x===-SN.dir.x&&d.y===-SN.dir.y)) SN.dir=d; }
+    const h=SN.cells[0], nx=h.x+SN.dir.x, ny=h.y+SN.dir.y; const hp=headPx();
+    SN.prev=SN.cells.map(c=>({...c}));
+    if(nx<0||nx>=COLS||ny<SN.top||ny>=ROWS){ die(hp.x,hp.y); return; }
+    if(SN.pins.some(p=>p.x===nx&&p.y===ny)){ die(nx*T+16,ny*T+16); return; }
+    const bodyEnd=SN.grow===0?SN.cells.length-1:SN.cells.length;
+    for(let i=0;i<bodyEnd;i++) if(SN.cells[i].x===nx&&SN.cells[i].y===ny){ die(hp.x,hp.y); return; }
+    SN.cells.unshift({x:nx,y:ny}); if(SN.grow>0) SN.grow--; else SN.cells.pop();
+    if(SN.prev.length<SN.cells.length) SN.prev.push({...SN.prev[SN.prev.length-1]});
+    const px=nx*T+16, py=ny*T+16;
+    if(SN.food&&SN.food.x===nx&&SN.food.y===ny){ const i=SN.food.i; SN.food=null; collectItem(i,px,py); SN.grow+=2; SN.speed=speedFor();
+      for(let k=0;k<2;k++){ const c=randFree(3); if(c) SN.pins.push(c); }
+      if(collected>=tot.items){ let c=null; for(let k=0;k<300&&!c;k++){ const x=1+Math.floor(Math.random()*(COLS-3)), y=SN.top+1+Math.floor(Math.random()*(ROWS-SN.top-3)); if(cellFree(x,y,2)&&cellFree(x+1,y,2)&&cellFree(x,y+1,2)&&cellFree(x+1,y+1,2)) c={x,y}; } SN.kassa=c||{x:14,y:8}; SN.pins=SN.pins.filter(p=>!(p.x>=SN.kassa.x-1&&p.x<=SN.kassa.x+2&&p.y>=SN.kassa.y-1&&p.y<=SN.kassa.y+2)); toast('Winkelwagen vol! Kruip naar de kassa 🛒'); }
+      else spawnFood(); }
+    if(SN.coin&&SN.coin.x===nx&&SN.coin.y===ny){ SN.coin=null; tot.coins++; collectCoin(px,py); SN.grow+=1; }
+    if(SN.kassa&&nx>=SN.kassa.x&&nx<SN.kassa.x+2&&ny>=SN.kassa.y&&ny<SN.kassa.y+2) win();
+  }
+  function drawBalloon(x,y,col,r){ const g=ctx.createRadialGradient(x-r*0.35,y-r*0.4,1,x,y,r*1.2); g.addColorStop(0,'#fff'); g.addColorStop(0.25,col); g.addColorStop(1,col); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(x,y,r,r*1.15,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.moveTo(x-2.5,y+r*1.1); ctx.lineTo(x+2.5,y+r*1.1); ctx.lineTo(x,y+r*1.35); ctx.closePath(); ctx.fill(); }
+  function draw(t){
+    ctx.fillStyle='#FFF6F3'; ctx.fillRect(0,0,W,H); drawBunting(t,0,false);
+    for(let cy=SN.top;cy<ROWS;cy++) for(let cx=0;cx<COLS;cx++){ ctx.fillStyle=(cx+cy)%2?'#FFE4DE':'#FFF6F3'; ctx.fillRect(cx*T,cy*T,T,T); }
+    ctx.fillStyle='#1A1414'; ctx.fillRect(0,SN.top*T-6,W,6); ctx.fillStyle='#D20000'; ctx.fillRect(0,SN.top*T-6,W,2);
+    ctx.save(); let sx=0,sy=0; if(shakeT>0){ sx=(Math.random()-.5)*shakeT*0.8; sy=(Math.random()-.5)*shakeT*0.8; } ctx.translate(sx,sy);
+    for(const p of SN.pins) drawPin(p.x*T+16,p.y*T+16);
+    if(SN.coin) drawCoin(SN.coin.x*T+16,SN.coin.y*T+14,t);
+    if(SN.food) drawCard(SN.food.i,SN.food.x*T+16,SN.food.y*T+16,t,SN.food.ph);
+    if(SN.kassa) drawKassa(SN.kassa.x*T,SN.kassa.y*T,t);
+    const f=deadT?0:Math.min(1,SN.timer/SN.speed);
+    if(!deadT&&!flicker()){
+      const pos=SN.cells.map((c,i)=>{ const p=SN.prev[i]||c; return {x:(p.x+(c.x-p.x)*f)*T+16,y:(p.y+(c.y-p.y)*f)*T+16}; });
+      ctx.strokeStyle='#5a4444'; ctx.lineWidth=1.5; ctx.beginPath(); pos.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.stroke();
+      for(let i=pos.length-1;i>=1;i--){ drawBalloon(pos[i].x,pos[i].y+Math.sin(t*0.1+i)*1.5,SNCOL[i%SNCOL.length],10); }
+      const h=pos[0]; drawBalloonHero(h.x,h.y+18,SN.dir.x||1,SN.dir.x*2,SN.dir.y*3,t,1.15,0); }
+    drawFx(); ctx.restore();
+  }
+  return {
+    buttons:[{id:'l',label:'◀',side:'l'},{id:'r',label:'▶',side:'l'},{id:'u',label:'▲',side:'r'},{id:'d',label:'▼',side:'r'}],
+    init(){ resetSnake(true); }, respawn(){ resetSnake(false); }, step, draw,
+    key(code,down){ if(!down) return; const m={ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0],ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1]}[code]; if(m) setDir(m[0],m[1]); },
+    touch(id,down){ if(!down) return; ({l:()=>setDir(-1,0),r:()=>setDir(1,0),u:()=>setDir(0,-1),d:()=>setDir(0,1)})[id]?.(); },
+    stats(){ return [['Lengte van de slang',SN.cells.length+' ballonnen'],['Ballonnetjes',coinsGot],['Ballonnen over',lives]]; },
+  };
+})();

@@ -1,0 +1,67 @@
+
+/* ================= MODE: FLAPPY (Ballonvlucht) ================= */
+const Flappy=(()=>{
+  const GR=0.30, FLAP=-6.2, SPEED0=2.5, GATE_DX=330, FLOOR=H-44, CEIL=44, RW=64;
+  const F={x:230,y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:0,speed:SPEED0,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false};
+  function makeGate(x){ const n=F.gateN++; let kind='coin'; const gapH=n<3?250:n<8?230:215;
+    if(collected+F.gates.filter(g=>g.kind==='item'&&!g.taken).length>=tot.items){ if(!F.kassaDone){ F.kassaDone=true; return {x,kind:'kassa',gapY:CEIL,gapH:FLOOR-CEIL,taken:false,passed:false}; } kind='coin'; }
+    else if(n%3===1){ kind='item'; }
+    const gapY=CEIL+40+Math.random()*(FLOOR-CEIL-80-gapH);
+    const it=kind==='item'?items.find(o=>!o.got&&!F.gates.some(g=>g.kind==='item'&&!g.taken&&g.i===o.i)):null;
+    return {x,gapY,gapH,kind,i:it?it.i:-1,taken:false,passed:false,ph:Math.random()*6}; }
+  function fill(){ while(F.nextX<F.wx+W+200){ F.gates.push(makeGate(F.nextX)); F.nextX+=GATE_DX; } F.gates=F.gates.filter(g=>g.x>F.wx-200); }
+  function flap(){ if(state!=='play'||deadT) return; F.flapReq=true; }
+  function step(){
+    if(deadT){ afterDeath(); return; }
+    F.anim++;
+    if(!F.started){ F.y=H/2+Math.sin(F.anim*0.08)*6; F.vy=0; if(F.flapReq){ F.started=true; } else return; }
+    if(F.flapReq){ F.vy=FLAP; F.flapReq=false; SFX.flap(); }
+    F.vy=Math.min(F.vy+GR,8); F.y+=F.vy;
+    if(F.y-34<CEIL){ F.y=CEIL+34; F.vy=Math.max(F.vy,0); }
+    F.rot+=((Math.max(-0.5,Math.min(0.8,F.vy*0.09)))-F.rot)*0.15;
+    F.wx+=F.speed; fill();
+    const bx=F.wx+F.x, by=F.y-16, r=13;
+    if(F.y>FLOOR){ die(F.x,FLOOR-10); return; }
+    for(const g of F.gates){
+      if(g.kind!=='kassa'){
+        const hitX=bx+r>g.x+4&&bx-r<g.x+RW-4;
+        if(hitX&&(by-r<g.gapY||by+r>g.gapY+g.gapH)){ die(F.x,F.y-16); return; }
+      }
+      const cx=g.x+RW/2, cy=g.gapY+g.gapH/2;
+      if(!g.taken&&g.kind!=='kassa'&&Math.hypot(bx-cx,by-cy)<30){ g.taken=true; if(g.kind==='item'&&g.i>=0){ collectItem(g.i,F.x,F.y-16); F.speed=Math.min(3.6,F.speed+0.09); } else collectCoin(F.x,F.y-16); }
+      if(g.kind==='kassa'&&bx>g.x+20){ win(); return; }
+      if(!g.passed&&bx>g.x+RW){ g.passed=true; F.passed++; }
+    }
+  }
+  function respawn(){ F.wx=Math.max(0,F.wx-240); F.y=H/2; F.vy=0; F.rot=0; F.started=false; F.flapReq=false;
+    const minX=F.wx+F.x+260; let shift=0; for(const g of F.gates){ if(!g.passed&&g.x<minX){ shift=Math.max(shift,minX-g.x); } }
+    if(shift){ for(const g of F.gates) if(!g.passed) g.x+=shift; F.nextX+=shift; } fill(); }
+  function drawRoll(x,y0,y1,capTop,capBottom){ const h=y1-y0; if(h<=0) return; ctx.save(); ctx.beginPath(); ctx.rect(x,y0,RW,h); ctx.clip();
+    ctx.fillStyle='#fff'; ctx.fillRect(x,y0,RW,h); ctx.fillStyle='#D20000'; for(let k=-h;k<RW+h;k+=28){ ctx.beginPath(); ctx.moveTo(x+k,y0); ctx.lineTo(x+k+14,y0); ctx.lineTo(x+k+14-h,y1); ctx.lineTo(x+k-h,y1); ctx.closePath(); ctx.fill(); }
+    const sh=ctx.createLinearGradient(x,0,x+RW,0); sh.addColorStop(0,'rgba(0,0,0,.28)'); sh.addColorStop(0.35,'rgba(255,255,255,.18)'); sh.addColorStop(1,'rgba(0,0,0,.35)'); ctx.fillStyle=sh; ctx.fillRect(x,y0,RW,h); ctx.restore();
+    ctx.fillStyle='#9E0000'; if(capBottom){ ctx.beginPath(); ctx.ellipse(x+RW/2,y1,RW/2,7,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x+RW/2,y1,RW/2-16,3,0,0,Math.PI*2); ctx.fill(); }
+    if(capTop){ ctx.fillStyle='#9E0000'; ctx.beginPath(); ctx.ellipse(x+RW/2,y0,RW/2,7,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x+RW/2,y0,RW/2-16,3,0,0,Math.PI*2); ctx.fill(); } }
+  function draw(t){
+    const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFF6F3'); g.addColorStop(1,'#FFE4DE'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    drawShelvesBg(F.wx*0.35,false); drawBunting(t,F.wx*0.6,false);
+    ctx.save(); let sx=0,sy=0; if(shakeT>0){ sx=(Math.random()-.5)*shakeT*0.8; sy=(Math.random()-.5)*shakeT*0.8; } ctx.translate(sx,sy);
+    // floor counter
+    ctx.fillStyle='#1A1414'; ctx.fillRect(0,FLOOR,W,H-FLOOR); ctx.fillStyle='#D20000'; ctx.fillRect(0,FLOOR,W,5); ctx.fillStyle='#FF7B7B'; ctx.fillRect(0,FLOOR,W,2);
+    for(let x=-((F.wx*1)%64);x<W;x+=64){ ctx.fillStyle='rgba(255,255,255,.06)'; ctx.fillRect(x,FLOOR+12,32,H-FLOOR-12); }
+    for(const gt of F.gates){ const x=gt.x-F.wx; if(x>W+80||x<-100) continue;
+      if(gt.kind==='kassa'){ drawKassa(x+RW/2-32,FLOOR-64,t); ctx.fillStyle='#D20000'; ctx.font='900 18px Grandstander, sans-serif'; ctx.textAlign='center'; ctx.fillText('Vlieg naar de kassa →',x+RW/2,FLOOR-90); ctx.textAlign='left'; continue; }
+      drawRoll(x,CEIL-10,gt.gapY,false,true); drawRoll(x,gt.gapY+gt.gapH,FLOOR,true,false);
+      if(!gt.taken){ const cx=x+RW/2, cy=gt.gapY+gt.gapH/2; if(gt.kind==='item'&&gt.i>=0) drawCard(gt.i,cx,cy,t,gt.ph); else drawCoin(cx,cy,t,gt.ph); } }
+    if(!deadT&&!flicker()) drawBalloonHero(F.x,F.y,1,2.5,F.vy,F.anim,1.3,F.rot);
+    if(!F.started&&!deadT){ ctx.fillStyle='rgba(26,20,20,.8)'; rr(F.x-80,F.y+30,220,34,17); ctx.fill(); ctx.fillStyle='#fff'; ctx.font='700 15px Grandstander, sans-serif'; ctx.fillText('Tik / ▲ / spatie om te flappen',F.x-66,F.y+52); }
+    drawFx(); ctx.restore();
+  }
+  return {
+    buttons:[{id:'j',label:'▲ FLAP',cls:'wide',side:'r'}],
+    init(){ Object.assign(F,{y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:620,speed:SPEED0,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false}); fill(); },
+    respawn, step, draw, tap:flap,
+    key(code,down){ if(down&&['ArrowUp','KeyW','Space','KeyZ'].includes(code)) flap(); },
+    touch(id,down){ if(id==='j'&&down) flap(); },
+    stats(){ return [['Poortjes gehaald',F.passed],['Ballonnetjes',coinsGot],['Ballonnen over',lives]]; },
+  };
+})();

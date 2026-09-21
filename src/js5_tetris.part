@@ -1,0 +1,73 @@
+
+/* ================= MODE: TETRIS (Dozen inpakken) ================= */
+const Tetris=(()=>{
+  const BW=10,BH=16,CS=30,OX=330,OY=40;
+  const PIECES={I:{c:'#8ED1FC',n:4,cells:[[0,1],[1,1],[2,1],[3,1]]},O:{c:'#FCB900',n:2,cells:[[0,0],[1,0],[0,1],[1,1]]},T:{c:'#9B51E0',n:3,cells:[[1,0],[0,1],[1,1],[2,1]]},S:{c:'#7BDCB5',n:3,cells:[[1,0],[2,0],[0,1],[1,1]]},Z:{c:'#D20000',n:3,cells:[[0,0],[1,0],[1,1],[2,1]]},J:{c:'#F78DA7',n:3,cells:[[0,0],[0,1],[1,1],[2,1]]},L:{c:'#FF8A3D',n:3,cells:[[2,0],[0,1],[1,1],[2,1]]}};
+  const TZ={board:[],cur:null,next:null,bag:[],gravT:0,interval:64,lockT:0,lines:0,clearing:null,dasL:0,dasR:0,softT:0,combo:0,maxCombo:0,winT:0,anim:0};
+  const cellsOf=(p)=>{ const d=PIECES[p.type]; let cs=d.cells; for(let r=0;r<p.rot;r++) cs=cs.map(([x,y])=>[d.n-1-y,x]); return cs.map(([x,y])=>[x+p.x,y+p.y]); };
+  const fits=(p)=>cellsOf(p).every(([x,y])=>x>=0&&x<BW&&y<BH&&(y<0||!TZ.board[y][x]));
+  function fromBag(){ if(!TZ.bag.length){ TZ.bag=Object.keys(PIECES).sort(()=>Math.random()-.5); } return TZ.bag.pop(); }
+  function spawn(){ TZ.cur={type:TZ.next||fromBag(),rot:0,x:3,y:-1}; TZ.next=fromBag(); TZ.gravT=0; TZ.lockT=0; if(!fits(TZ.cur)){ TZ.cur=null; die(OX+BW*CS/2,OY+30); } }
+  function tryMove(dx,dy){ const p={...TZ.cur,x:TZ.cur.x+dx,y:TZ.cur.y+dy}; if(fits(p)){ TZ.cur=p; return true; } return false; }
+  function rotate(dir){ if(!TZ.cur||TZ.cur.type==='O') return; const rot=(TZ.cur.rot+dir+4)%4; for(const k of [0,-1,1,-2,2]){ const p={...TZ.cur,rot,x:TZ.cur.x+k}; if(fits(p)){ TZ.cur=p; TZ.lockT=Math.min(TZ.lockT,10); SFX.rotate(); return; } } }
+  function lock(){ const p=TZ.cur; TZ.cur=null; const col=PIECES[p.type].c; let top=false; for(const [x,y] of cellsOf(p)){ if(y<0){ top=true; continue; } TZ.board[y][x]=col; } SFX.lock();
+    if(top){ die(OX+BW*CS/2,OY+30); return; }
+    const rows=[]; for(let y=0;y<BH;y++) if(TZ.board[y].every(v=>v)) rows.push(y);
+    if(rows.length){ TZ.clearing={rows,t:16}; SFX.line(); TZ.combo=rows.length; TZ.maxCombo=Math.max(TZ.maxCombo,rows.length); } else spawn(); }
+  function hardDrop(){ if(!TZ.cur) return; while(tryMove(0,1)){} lock(); }
+  function finishClear(){ const rows=TZ.clearing.rows; TZ.clearing=null;
+    for(const y of rows){ TZ.board.splice(y,1); TZ.board.unshift(Array(BW).fill(null)); TZ.lines++; const it=nextItem(); if(it) collectItem(it.i,OX+BW*CS/2,OY+y*CS); }
+    if(rows.length>1){ for(let k=1;k<rows.length;k++){ tot.coins++; collectCoin(OX+BW*CS/2+k*20,OY+rows[0]*CS); } }
+    TZ.interval=Math.max(24,64-TZ.lines*3);
+    if(collected>=tot.items){ TZ.winT=70; return; }
+    spawn(); }
+  function step(){
+    TZ.anim++;
+    if(deadT){ afterDeath(); return; }
+    if(TZ.winT){ if(--TZ.winT===0) win(); return; }
+    if(TZ.clearing){ if(--TZ.clearing.t<=0) finishClear(); return; }
+    if(!TZ.cur) return;
+    if(keys.l){ TZ.dasL++; if(TZ.dasL===1||(TZ.dasL>12&&(TZ.dasL-12)%4===0)){ if(tryMove(-1,0)) SFX.move(); } } else TZ.dasL=0;
+    if(keys.r){ TZ.dasR++; if(TZ.dasR===1||(TZ.dasR>12&&(TZ.dasR-12)%4===0)){ if(tryMove(1,0)) SFX.move(); } } else TZ.dasR=0;
+    if(keys.d){ TZ.softT++; if(TZ.softT%3===0){ if(tryMove(0,1)) TZ.gravT=0; } } else TZ.softT=0;
+    TZ.gravT++; if(TZ.gravT>=TZ.interval){ TZ.gravT=0; tryMove(0,1); }
+    if(!fits({...TZ.cur,y:TZ.cur.y+1})){ TZ.lockT++; if(TZ.lockT>=34) lock(); } else TZ.lockT=0;
+  }
+  function drawBox(x,y,col,alpha=1,ghost=false){ ctx.save(); ctx.globalAlpha=alpha; if(ghost){ ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([4,3]); rr(x+3,y+3,CS-6,CS-6,4); ctx.stroke(); ctx.restore(); return; }
+    ctx.fillStyle=col; rr(x+1,y+1,CS-2,CS-2,4); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.35)'; ctx.fillRect(x+3,y+3,CS-6,4); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(x+3,y+CS-7,CS-6,4);
+    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fillRect(x+CS/2-2.5,y+1,5,CS-2); ctx.fillRect(x+1,y+CS/2-2.5,CS-2,5); ctx.fillStyle='rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(x+CS/2,y+CS/2,4,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  function drawPiecePreview(type,x,y){ const d=PIECES[type]; const w=d.n*22; for(const [cx,cy] of d.cells){ ctx.save(); ctx.translate(x-w/2+cx*22,y+cy*22); ctx.scale(22/CS,22/CS); drawBox(0,0,d.c); ctx.restore(); } }
+  function draw(t){
+    const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFF6F3'); g.addColorStop(1,'#FFE4DE'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); drawShelvesBg(0,false); drawBunting(t,0,false);
+    ctx.save(); let sx=0,sy=0; if(shakeT>0){ sx=(Math.random()-.5)*shakeT*0.8; sy=(Math.random()-.5)*shakeT*0.8; } ctx.translate(sx,sy);
+    // board
+    ctx.fillStyle='#fff'; rr(OX-8,OY-8,BW*CS+16,BH*CS+16,8); ctx.fill(); ctx.strokeStyle='#D20000'; ctx.lineWidth=3; rr(OX-8,OY-8,BW*CS+16,BH*CS+16,8); ctx.stroke();
+    for(let y=0;y<BH;y++) for(let x=0;x<BW;x++){ ctx.fillStyle=(x+y)%2?'#FFF1EE':'#FFF8F6'; ctx.fillRect(OX+x*CS,OY+y*CS,CS,CS); }
+    for(let y=0;y<BH;y++) for(let x=0;x<BW;x++){ const c=TZ.board[y][x]; if(c){ const fl=TZ.clearing&&TZ.clearing.rows.includes(y)&&Math.floor(TZ.clearing.t/3)%2===0; drawBox(OX+x*CS,OY+y*CS,fl?'#fff':c); } }
+    if(TZ.cur&&!deadT){ const ghost={...TZ.cur}; while(fits({...ghost,y:ghost.y+1})) ghost.y++; const col=PIECES[TZ.cur.type].c;
+      for(const [x,y] of cellsOf(ghost)) if(y>=0) drawBox(OX+x*CS,OY+y*CS,col,0.6,true);
+      for(const [x,y] of cellsOf(TZ.cur)) if(y>=0) drawBox(OX+x*CS,OY+y*CS,col); }
+    // left panel: next
+    ctx.fillStyle='#fff'; rr(80,60,200,150,8); ctx.fill(); ctx.strokeStyle='#D20000'; ctx.lineWidth=2; rr(80,60,200,150,8); ctx.stroke();
+    ctx.fillStyle='#D20000'; ctx.font='900 18px Grandstander, sans-serif'; ctx.textAlign='center'; ctx.fillText('Volgende doos',180,88);
+    if(TZ.next) drawPiecePreview(TZ.next,180,120);
+    ctx.fillStyle='#1A1414'; ctx.font='700 14px Grandstander, sans-serif'; ctx.fillText('Regels: '+TZ.lines+'   Combo: '+TZ.maxCombo,180,196);
+    ctx.fillStyle='#fff'; rr(80,230,200,150,8); ctx.fill(); ctx.strokeStyle='#D20000'; rr(80,230,200,150,8); ctx.stroke();
+    ctx.fillStyle='#D20000'; ctx.font='900 18px Grandstander, sans-serif'; ctx.fillText('Zo werkt het',180,258);
+    ctx.fillStyle='#1A1414'; ctx.font='500 13px Roboto, sans-serif'; ['Elke volle rij = één','bestelling ingepakt en','verzonden. Tien rijen en','de winkelwagen is vol.','◀ ▶ schuiven · ▲ draaien','▼ sneller · spatie vallen'].forEach((l,i)=>ctx.fillText(l,180,282+i*17));
+    // right panel: orders
+    ctx.fillStyle='#fff'; rr(680,60,210,330,8); ctx.fill(); ctx.strokeStyle='#D20000'; rr(680,60,210,330,8); ctx.stroke();
+    ctx.fillStyle='#D20000'; ctx.font='900 18px Grandstander, sans-serif'; ctx.fillText('Bestellingen',785,88); ctx.textAlign='left';
+    CATS.forEach((c,i)=>{ const y=100+i*28; const got=items[i].got; const im=IMG[i]; ctx.save(); ctx.globalAlpha=got?1:0.35; if(im.complete&&im.naturalWidth){ ctx.save(); rr(692,y,22,22,4); ctx.clip(); ctx.drawImage(im,692,y,22,22); ctx.restore(); } ctx.fillStyle='#1A1414'; ctx.font=(got?'700':'500')+' 13px Roboto, sans-serif'; ctx.fillText(c.name,722,y+16); ctx.restore(); if(got){ ctx.fillStyle='#28A745'; ctx.font='900 14px Grandstander, sans-serif'; ctx.fillText('✓',872,y+17); } });
+    if(TZ.winT){ drawKassa(OX+BW*CS/2-32,OY+BH*CS/2-40,t); }
+    drawFx(); ctx.restore();
+  }
+  return {
+    buttons:[{id:'l',label:'◀',side:'l'},{id:'r',label:'▶',side:'l'},{id:'rot',label:'⟳',side:'r'},{id:'drop',label:'⤓',side:'r'}],
+    init(){ TZ.board=Array.from({length:BH},()=>Array(BW).fill(null)); TZ.bag=[]; TZ.next=null; TZ.lines=0; TZ.interval=64; TZ.clearing=null; TZ.combo=0; TZ.maxCombo=0; TZ.winT=0; TZ.dasL=TZ.dasR=TZ.softT=0; spawn(); },
+    respawn(){ TZ.board=Array.from({length:BH},()=>Array(BW).fill(null)); TZ.clearing=null; spawn(); }, step, draw,
+    key(code,down){ if(!down||deadT||TZ.clearing||TZ.winT) return; if(code==='ArrowUp'||code==='KeyW'||code==='KeyX') rotate(1); else if(code==='KeyZ') rotate(-1); else if(code==='Space') hardDrop(); },
+    touch(id,down){ if(id==='l') keys.l=down; else if(id==='r') keys.r=down; else if(down&&!deadT&&!TZ.clearing&&!TZ.winT){ if(id==='rot') rotate(1); else if(id==='drop') hardDrop(); } },
+    stats(){ return [['Rijen ingepakt',TZ.lines],['Beste combo',TZ.maxCombo+' rijen tegelijk'],['Ballonnen over',lives]]; },
+  };
+})();

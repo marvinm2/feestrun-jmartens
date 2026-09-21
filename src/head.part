@@ -1,0 +1,168 @@
+<title>Feestrun J. Martens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grandstander:ital,wght@0,500;0,700;0,900;1,900&family=Roboto:wght@400;500;700&display=swap">
+<style>
+:root{
+  --red:#D20000; --red-dark:#9E0000; --red-light:#FF6B6B; --red-soft:#FFD9D3;
+  --ink:#1A1414; --muted:#6b5c5c; --paper:#FFFFFF; --paper-2:#FFF3F0; --line:#F1D9D4;
+  --gold:#FCB900; --sky:#8ED1FC; --mint:#7BDCB5; --purple:#9B51E0; --pink:#E8388A; --green:#28A745;
+  --font-display:"Grandstander","Comic Sans MS","Trebuchet MS",sans-serif;
+  --font-body:"Roboto","Segoe UI",system-ui,sans-serif;
+}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15px}
+.wrap{max-width:1000px;margin:0 auto;padding-block:0 32px;padding-inline:16px;display:flex;flex-direction:column;gap:0}
+/* header in the style of the shop */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:13px;color:#333}
+.top .links{display:flex;gap:18px;flex-wrap:wrap}
+.top .links span::before{content:"● ";color:var(--red)}
+.top .tools{display:flex;gap:8px}
+.top .tools button{font:700 12px var(--font-display);background:#fff;border:2px solid var(--red);color:var(--red);border-radius:999px;padding:5px 12px;cursor:pointer}
+.top .tools button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.brandbar{display:flex;align-items:center;gap:22px;padding:12px 0;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:4px;text-decoration:none}
+.logo-img{height:58px;width:auto;display:block}
+.logo .word{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:34px;color:var(--red);letter-spacing:-.5px;text-shadow:2px 2px 0 #1a1414,-1px -1px 0 #1a1414,1px -1px 0 #1a1414,-1px 1px 0 #1a1414;line-height:1}
+.logo .word small{font-size:.62em;font-weight:900}
+.slogan{font-family:var(--font-display);font-weight:700;font-size:17px;color:#333;letter-spacing:.3px}
+.slogan b{color:var(--red)}
+.slogan .caret{display:inline-block;width:2px;height:1em;background:#333;vertical-align:-2px;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.nav{background:var(--red);color:#fff;display:flex;flex-wrap:wrap;font-family:var(--font-display);font-weight:700;font-size:15px;border-radius:4px;margin-bottom:14px}
+.nav button{all:unset;cursor:pointer;padding:11px 18px;color:#fff;display:flex;align-items:center;gap:8px}
+.nav button:hover,.nav button:focus-visible{background:rgba(0,0,0,.18);outline:none}
+.nav-logo{height:26px;width:auto;align-self:center;margin-left:10px;background:#fff;border-radius:4px;padding:2px 6px}
+.nav button .n{font-size:11px;background:#fff;color:var(--red);border-radius:999px;padding:1px 7px;font-weight:900}
+.nav button.active{background:rgba(0,0,0,.25)}
+.nav button.home{font-weight:900}
+.xline{display:flex;align-items:center;gap:14px;font-family:var(--font-display);font-weight:900;color:var(--red);font-size:24px;margin:22px 0 12px;letter-spacing:.3px}
+.xline::before,.xline::after{content:"";flex:1;height:8px;background:radial-gradient(circle,var(--red) 1.6px,transparent 2px) 0 50%/9px 8px repeat-x}
+/* frame */
+.frame{position:relative;width:100%;aspect-ratio:960/544;border-radius:6px;overflow:hidden;background:#FFF3F0;box-shadow:0 8px 30px rgba(120,0,0,.16),0 0 0 3px var(--red)}
+canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;inset:0;pointer-events:none;font-family:var(--font-display)}
+.cart{position:absolute;left:10px;top:8px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);padding:5px 8px;border-radius:10px;border:2px solid var(--red)}
+.cart .lbl{font-size:14px;color:var(--red);margin-right:2px}
+.slot{width:30px;height:30px;border-radius:6px;background:#eee;border:2px solid #ddd;overflow:hidden;position:relative;transition:transform .2s}
+.slot img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) opacity(.25);transition:filter .3s}
+.slot.got{border-color:var(--red)}
+.slot.got img{filter:none}
+.slot.pop{animation:slotpop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes slotpop{0%{transform:scale(.4) rotate(-20deg)}100%{transform:scale(1) rotate(0)}}
+.stats{position:absolute;right:10px;top:8px;display:flex;gap:8px}
+.stat{background:rgba(255,255,255,.9);border:2px solid var(--red);border-radius:10px;padding:4px 10px;font-size:17px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.stat .k{font-size:10px;color:var(--muted);font-weight:900;letter-spacing:.6px}
+.life{width:14px;height:17px;border-radius:50% 50% 50% 50%/45% 45% 55% 55%;background:radial-gradient(circle at 35% 30%,#ff9a9a,var(--red) 55%,var(--red-dark));display:inline-block;margin-right:2px}
+.life.lost{background:#ddd}
+.pickup{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(0);opacity:0;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.pickup img{width:150px;height:150px;border-radius:12px;border:5px solid #fff;box-shadow:0 8px 24px rgba(120,0,0,.3)}
+.pickup .name{background:var(--red);color:#fff;font-size:24px;font-weight:900;padding:4px 18px;border-radius:8px;transform:rotate(-3deg);box-shadow:0 4px 0 var(--red-dark);white-space:nowrap}
+.pickup.show{animation:pick 1.4s ease-out forwards}
+@keyframes pick{0%{transform:translate(-50%,-50%) scale(0);opacity:0}15%{transform:translate(-50%,-50%) scale(1.1);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}75%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-70%) scale(.6);opacity:0}}
+.toast{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(26,20,20,.88);color:#fff;font-family:var(--font-display);font-weight:700;font-size:15px;padding:7px 16px;border-radius:999px;opacity:0;transition:opacity .3s;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,243,240,.93);padding:16px;pointer-events:auto}
+.overlay[hidden]{display:none!important}
+.panel{background:#fff;border:3px solid var(--red);border-radius:8px;padding:18px 24px;max-width:600px;width:100%;text-align:center;box-shadow:0 8px 0 var(--red-dark);max-height:100%;overflow:auto;box-sizing:border-box}
+.tlogo{height:54px;width:auto;margin:0 auto 6px;display:block}
+.panel h1{font-family:var(--font-display);font-weight:900;font-size:clamp(28px,5.5vw,46px);margin:0;color:var(--red);line-height:1.05;text-wrap:balance}
+.panel h1 span{display:block;font-size:.4em;color:var(--ink);margin-top:6px;font-weight:700}
+.panel p{margin:10px 0;font-size:15px;line-height:1.45}
+.thumbs{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin:10px 0}
+.thumbs img{width:38px;height:38px;border-radius:6px;border:2px solid var(--red);object-fit:cover}
+.keys{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:700;color:#5a4444}
+kbd{font-family:var(--font-body);font-weight:700;background:var(--paper-2);border:1px solid #e9bdb3;border-bottom-width:3px;border-radius:5px;padding:1px 7px;color:var(--ink)}
+.btn{font-family:var(--font-display);font-weight:900;font-size:22px;background:var(--red);color:#fff;border:0;border-radius:6px;padding:10px 30px;cursor:pointer;box-shadow:0 5px 0 var(--red-dark);margin-top:8px}
+.btn.green{background:var(--green);box-shadow:0 5px 0 #1b7a33}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--red-dark)}
+.btn:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.lvlpick{margin-top:12px;font-size:13px;font-weight:700;color:var(--muted);display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap}
+.lvlpick button{font:700 12px var(--font-display);background:#fff;border:2px solid var(--red);color:var(--red);border-radius:999px;padding:3px 10px;cursor:pointer}
+.receipt{background:#fffdf9;font-family:var(--font-body);font-variant-numeric:tabular-nums;text-align:left;margin:10px auto;max-width:340px;padding:14px 18px 22px;border:1px dashed #d9c3bd;
+  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,radial-gradient(circle at 50% 100%,transparent 6px,#000 6.5px) bottom/14px 10px repeat-x;
+  mask:linear-gradient(#000 0 0) top/100% calc(100% - 10px) no-repeat,radial-gradient(circle at 50% 100%,transparent 6px,#000 6.5px) bottom/14px 10px repeat-x}
+.receipt .h{text-align:center;font-family:var(--font-display);font-weight:900;letter-spacing:1px;border-bottom:2px dashed #ddd;padding-bottom:8px;margin-bottom:8px;color:var(--red)}
+.receipt .h small{display:block;letter-spacing:0;font-weight:700;color:var(--muted);font-family:var(--font-body)}
+.receipt .line{display:flex;justify-content:space-between;font-size:14px;padding:2px 0}
+.receipt .line.miss{color:#b9a7a7}
+.receipt .tot{border-top:2px dashed #ddd;margin-top:8px;padding-top:8px;font-weight:700;font-size:16px}
+.receipt .rate{text-align:center;color:var(--pink);font-family:var(--font-display);font-weight:900;font-size:20px;margin-top:8px}
+.touch{position:absolute;inset:auto 0 0 0;display:none;justify-content:space-between;padding:0 12px 12px;pointer-events:none}
+.touch div{display:flex;gap:10px}
+.touch button{pointer-events:auto;min-width:60px;height:60px;border-radius:50%;border:3px solid var(--red);background:rgba(255,255,255,.8);color:var(--red);font-size:22px;font-weight:900;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 10px;font-family:var(--font-display)}
+.touch button.wide{border-radius:30px;padding:0 22px;font-size:16px}
+@media (pointer:coarse){.touch{display:flex}}
+.badge{display:inline-block;background:var(--pink);color:#fff;font-family:var(--font-display);font-weight:700;font-size:12px;padding:3px 10px;border-radius:4px}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.lv{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px;cursor:pointer;text-align:left;font-family:var(--font-body);box-shadow:0 2px 8px rgba(120,0,0,.06);transition:transform .15s,box-shadow .15s}
+.lv:hover,.lv:focus-visible{transform:translateY(-2px);box-shadow:0 6px 16px rgba(120,0,0,.14);outline:none}
+.lv .t{font-family:var(--font-display);font-weight:900;color:var(--red);font-size:17px;margin:4px 0 2px}
+.lv .s{font-size:12px;color:var(--muted);line-height:1.4}
+.lv .n{display:inline-block;background:var(--red);color:#fff;font-family:var(--font-display);font-weight:900;font-size:11px;padding:2px 8px;border-radius:999px}
+.usp{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.usp div{background:var(--red);color:#fff;font-family:var(--font-display);font-weight:700;font-size:13px;padding:8px 14px;border-radius:4px}
+footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (prefers-reduced-motion:reduce){.slot.pop,.pickup.show,.slogan .caret{animation-duration:.01s}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="links"><span>online feestwinkel</span><span>Raamsdonk</span><span>info@j-martens.nl</span></div>
+    <div class="tools"><button id="btnMute" type="button" aria-pressed="false">🔊 Geluid</button><button id="btnRestart" type="button">↻ Level opnieuw</button></div>
+  </div>
+  <div class="brandbar">
+    <a class="logo" href="#" id="logoLink" aria-label="J-Martens.nl Feestrun"><img class="logo-img" src="img/logo.png" alt="J-Martens.nl" width="200" height="57"></a>
+    <div class="slogan">online feestwinkel. De plek voor <b id="typed">Carnaval</b><span class="caret"></span></div>
+  </div>
+  <nav class="nav" id="nav" aria-label="Levels">
+    <img class="nav-logo" src="img/logo.png" alt="" hidden><button type="button" class="home" data-home>Home</button>
+  </nav>
+
+  <div class="frame" id="frame">
+    <canvas id="c" width="960" height="544" aria-label="Feestrun spel"></canvas>
+    <div class="hud">
+      <div class="cart"><span class="lbl">🛒</span><div id="slots" style="display:flex;gap:4px"></div></div>
+      <div class="stats">
+        <div class="stat" id="livesBox" title="Ballonnen over"></div>
+        <div class="stat"><span class="k">LEVEL</span><span id="lvl">1</span></div>
+        <div class="stat"><span class="k">🎈</span><span id="coins">0</span></div>
+        <div class="stat"><span class="k">TIJD</span><span id="time">0:00</span></div>
+      </div>
+      <div class="pickup" id="pickup"><img id="pickImg" alt=""><div class="name" id="pickName"></div></div>
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="touch" id="touch"><div id="touchL"></div><div id="touchR"></div></div>
+
+    <div class="overlay" id="ovTitle">
+      <div class="panel">
+        <img class="tlogo" src="img/logo.png" alt="J-Martens.nl" width="200" height="57">
+        <h1>Feestrun <span>5 levels · 4 spelstijlen · 1 winkelwagen</span></h1>
+        <p>Jij bent de rode ballon van J-Martens. Verzamel in elk level alle <b>10 productcategorieën</b>, ontwijk de <b>spelden</b> en reken af bij de <b>kassa</b>. Elk level is een ander soort spel!</p>
+        <div class="thumbs" id="titleThumbs"></div>
+        <div class="keys"><span><kbd>◀</kbd> <kbd>▶</kbd> <kbd>▲</kbd> <kbd>▼</kbd> sturen</span><span><kbd>spatie</kbd> springen / flappen / laten vallen</span><span><kbd>R</kbd> opnieuw</span><span><kbd>M</kbd> geluid</span></div>
+        <button class="btn" id="btnStart" type="button">Start de feestrun!</button>
+        <div class="lvlpick" id="lvlpick">Of begin direct bij</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ovWin" hidden>
+      <div class="panel">
+        <h1>Afgerekend! <span id="winSub">bedankt voor je bezoek</span></h1>
+        <div class="receipt" id="receipt"></div>
+        <button class="btn green" id="btnAgain" type="button">Nog een keer</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="ovOver" hidden>
+      <div class="panel">
+        <h1>Alle ballonnen geknapt! <span>de spelden hebben gewonnen</span></h1>
+        <p id="overText"></p>
+        <button class="btn" id="btnRetry" type="button">Probeer opnieuw</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="xline">De levels</div>
+  <div class="levels" id="levelCards"></div>
+  <div class="usp"><div>Voor 15 uur besteld? Diezelfde dag verzonden!</div><div>Buurtbezorging vanaf € 15,- gratis</div><div>Feestscore = categorieën × 100 + ballonnetjes × 10 + snelheidsbonus</div></div>
+  <footer><span>Feestrun is een spelletje rond de productcategorieën van J-Martens.nl: Ballonnen, Folieballonnen, Ballondecoraties, Feestversiering, Cadeaupapier, Home decoratie, Kleding, Schmink, Speelgoed, Abraham &amp; Sarah.</span><span>Werkt met toetsenbord en touch.</span></footer>
+</div>
