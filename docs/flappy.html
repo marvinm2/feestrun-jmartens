@@ -122,6 +122,44 @@ a.lv{display:block;text-decoration:none;color:inherit}
 .usp div{background:var(--red);color:#fff;font-family:var(--font-display);font-weight:700;font-size:13px;padding:8px 14px;border-radius:4px}
 footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 @media (prefers-reduced-motion:reduce){.slot.pop,.pickup.show,.slogan .caret{animation-duration:.01s}}
+/* ---------- mobile ---------- */
+@media (max-width:640px),(max-height:520px){ /* small phones portrait, and any phone in landscape */
+  .cart{left:6px;top:5px;padding:3px 5px;gap:3px} .cart .lbl{font-size:12px} .slot{width:20px;height:20px;border-radius:4px;border-width:1.5px} #slots{gap:2px!important}
+  .stats{right:6px;top:5px;gap:4px} .stat{font-size:12px;padding:2px 6px;border-width:1.5px;gap:3px} .stat .k{font-size:8px} .life{width:10px;height:12px}
+  .pickup img{width:84px;height:84px;border-width:3px} .pickup .name{font-size:14px;padding:3px 10px}
+  .toast{font-size:12px;padding:5px 10px;bottom:6%}
+}
+.rotate-hint{display:none;margin:8px 0 0;text-align:center;font:700 13px var(--font-display);color:var(--muted)}
+.is-touch .keys{display:none}
+.is-touch .touch{display:flex}
+@media (max-width:640px){
+  .wrap{padding-inline:10px;padding-bottom:20px}
+  .top{font-size:11px;gap:6px} .top .links{gap:10px} .top .tools button{font-size:11px;padding:4px 9px}
+  .brandbar{gap:10px;padding:8px 0} .logo-img{height:44px} .slogan{font-size:14px}
+  .nav{font-size:13px} .nav button,.nav a{padding:9px 11px;gap:6px} .nav-logo{display:none}
+  .stats{top:34px}
+  .overlay{position:fixed;inset:0;z-index:50;padding:12px;background:rgba(255,243,240,.97)}
+  .panel{padding:14px 14px 18px} .panel h1{font-size:26px} .panel p{font-size:14px} .thumbs img{width:30px;height:30px} .btn{font-size:18px;padding:9px 22px}
+  .receipt{padding:10px 12px 18px} .receipt .line{font-size:13px}
+  .xline{font-size:19px;margin:16px 0 10px}
+  .is-touch .rotate-hint{display:block}
+}
+@media (max-width:640px) and (orientation:portrait){
+  .frame{overflow:visible} .frame canvas{border-radius:6px}
+  .is-touch .frame{margin-bottom:78px}
+  .touch{top:100%;bottom:auto;padding:12px 0 0}
+  .touch button{min-width:56px;height:56px;font-size:20px}
+}
+@media (orientation:landscape){
+  .rotate-hint{display:none!important}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .is-touch .top,.is-touch .brandbar,.is-touch .xline,.is-touch .levels,.is-touch .usp,.is-touch footer,.is-touch #titleText{display:none}
+  .is-touch .wrap{padding:6px 8px 6px} .is-touch .nav{margin-bottom:6px}
+  .is-touch .frame{max-width:calc((100vh - 70px) * 960 / 544);margin:0 auto}
+  .is-touch .touch{padding:0 10px 8px} .is-touch .touch button{min-width:52px;height:52px}
+  .is-touch .thumbs,.is-touch .tlogo{display:none} .is-touch .panel{padding:10px 14px 14px} .is-touch .panel h1{font-size:24px} .is-touch .panel h1 span{margin-top:2px} .is-touch .btn{margin-top:4px;font-size:17px;padding:7px 20px} .is-touch .lvlpick{margin-top:8px} .is-touch .receipt{margin:6px auto;padding:8px 12px 14px}
+}
 </style>
 
 <div class="wrap">
@@ -180,6 +218,7 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
       </div>
     </div>
   </div>
+  <div class="rotate-hint">📱 Draai je telefoon een kwartslag voor een groter speelveld</div>
 
   <div class="xline">De levels</div>
   <div class="levels" id="levelCards"></div>
@@ -1050,6 +1089,7 @@ addEventListener('keyup',e=>onKey(e.code,false));
 addEventListener('blur',()=>{ keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 cv.tabIndex=0; cv.addEventListener('pointerdown',()=>{ cv.focus(); initAudio(); if(state==='play'&&MODE&&MODE.tap) MODE.tap(); });
+if((window.matchMedia&&matchMedia('(pointer:coarse)').matches)||/[?&]touch=1/.test(location.search||'')) document.body.classList.add('is-touch');
 function buildTouch(){ const L=$('touchL'),R=$('touchR'); L.innerHTML=''; R.innerHTML='';
   for(const b of MODE.buttons){ const el=document.createElement('button'); el.type='button'; el.textContent=b.label; el.setAttribute('aria-label',b.label); if(b.cls) el.className=b.cls;
     el.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); MODE.touch(b.id,true); }); ['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,e=>{ e.preventDefault(); MODE.touch(b.id,false); })); el.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1087,7 +1127,8 @@ function renderNav(){
 function boot(data){
   if(document.fonts&&document.fonts.load) Promise.all([document.fonts.load('900 16px Grandstander'),document.fonts.load('700 16px Grandstander')]).catch(()=>{});
   requestAnimationFrame(loop);
-  if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); }
+  if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); return; }
+  const m=/[?&]level=(\d+)/.exec(location.search||''); if(m){ const li=Math.min(ACTIVE_GAMES[0].levels.length,Math.max(1,+m[1]))-1; play(li,li===0); } // deep link: <spel>.html?level=2
 }
 boot(null);
 })();

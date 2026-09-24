@@ -51,6 +51,7 @@ addEventListener('keyup',e=>onKey(e.code,false));
 addEventListener('blur',()=>{ keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 cv.tabIndex=0; cv.addEventListener('pointerdown',()=>{ cv.focus(); initAudio(); if(state==='play'&&MODE&&MODE.tap) MODE.tap(); });
+if((window.matchMedia&&matchMedia('(pointer:coarse)').matches)||/[?&]touch=1/.test(location.search||'')) document.body.classList.add('is-touch');
 function buildTouch(){ const L=$('touchL'),R=$('touchR'); L.innerHTML=''; R.innerHTML='';
   for(const b of MODE.buttons){ const el=document.createElement('button'); el.type='button'; el.textContent=b.label; el.setAttribute('aria-label',b.label); if(b.cls) el.className=b.cls;
     el.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); MODE.touch(b.id,true); }); ['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,e=>{ e.preventDefault(); MODE.touch(b.id,false); })); el.addEventListener('contextmenu',e=>e.preventDefault());
@@ -89,7 +90,8 @@ try{ window.claude?.hot?.snapshot?.(()=>({game:LV&&LV.game.id,li:LV&&LV.li,total
 function boot(data){
   if(document.fonts&&document.fonts.load) Promise.all([document.fonts.load('900 16px Grandstander'),document.fonts.load('700 16px Grandstander')]).catch(()=>{});
   requestAnimationFrame(loop);
-  if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); }
+  if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); return; }
+  const m=/[?&]level=(\d+)/.exec(location.search||''); if(m){ const li=Math.min(ACTIVE_GAMES[0].levels.length,Math.max(1,+m[1]))-1; play(li,li===0); } // deep link: <spel>.html?level=2
 }
 window.__feest={play,step,draw:t=>{ctx.clearRect(0,0,W,H); if(MODE) MODE.draw(t);},keys,key:onKey,debug:()=>MODE&&MODE.debug?MODE.debug():null,LEVELS,GAMES,ACTIVE_GAMES,FIXED_GAME,get state(){return state},get frames(){return frames},get collected(){return collected},get lives(){return lives},get deadT(){return deadT},get tot(){return tot},get lvIdx(){return lvIdx},get LV(){return LV},mode:()=>MODE,win,items};
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? null);
