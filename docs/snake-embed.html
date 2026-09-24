@@ -1,4 +1,15 @@
-<title>Feestrun J. Martens</title>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Feestrun – De ballonnenslang (snake) – J-Martens.nl</title>
+<meta name="description" content="Eet als ballonnenslang alle productcategorieën van J-Martens.nl en ontwijk de spelden in 3 levels.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<meta name="robots" content="index,follow">
+<style>html{color-scheme:light}body{margin:0;background:#fff}img{max-width:100%}[hidden]{display:none!important}.wrap{padding:8px 8px 10px!important}.nav{margin-bottom:8px!important}</style>
+</head>
+<body>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grandstander:ital,wght@0,500;0,700;0,900;1,900&family=Roboto:wght@400;500;700&display=swap">
 <style>
 :root{
@@ -114,16 +125,8 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
 </style>
 
 <div class="wrap">
-  <div class="top">
-    <div class="links"><span>online feestwinkel</span><span>Raamsdonk</span><span>info@j-martens.nl</span><span><a href="index.html">Alle spelletjes</a></span></div>
-    <div class="tools"><button id="btnMute" type="button" aria-pressed="false">🔊 Geluid</button><button id="btnRestart" type="button">↻ Level opnieuw</button></div>
-  </div>
-  <div class="brandbar">
-    <a class="logo" href="#" id="logoLink" aria-label="J-Martens.nl Feestrun"><img class="logo-img" src="img/logo.png" alt="J-Martens.nl" width="200" height="57"></a>
-    <div class="slogan">online feestwinkel. De plek voor <b id="typed">Carnaval</b><span class="caret"></span></div>
-  </div>
   <nav class="nav" id="nav" aria-label="Levels">
-    <img class="nav-logo" src="img/logo.png" alt="" hidden><button type="button" class="home" data-home>Home</button>
+    <img class="nav-logo" src="img/logo.png" alt="J-Martens.nl"><button type="button" class="home" data-home>Home</button><button type="button" id="btnMute" aria-pressed="false" style="margin-left:auto">🔊 Geluid</button><button type="button" id="btnRestart">↻ Opnieuw</button>
   </nav>
 
   <div class="frame" id="frame">
@@ -170,10 +173,6 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
     </div>
   </div>
 
-  <div class="xline">De levels</div>
-  <div class="levels" id="levelCards"></div>
-  <div class="usp"><div>Voor 15 uur besteld? Diezelfde dag verzonden!</div><div>Buurtbezorging vanaf € 15,- gratis</div><div>Feestscore = categorieën × 100 + ballonnetjes × 10 + snelheidsbonus</div></div>
-  <footer><span>Feestrun is een spelletje rond de productcategorieën van J-Martens.nl: Ballonnen, Folieballonnen, Ballondecoraties, Feestversiering, Cadeaupapier, Home decoratie, Kleding, Schmink, Speelgoed, Abraham &amp; Sarah.</span><span>Werkt met toetsenbord en touch.</span></footer>
 </div>
 <script>
 (()=>{
@@ -624,7 +623,7 @@ const SEGS_P3=[
    switcher) and is rewritten by build_site.py to one game id per website page.
    Level-only fields (name, sub, segs, night, diff, bpm/tr overrides) are merged over the game
    fields into the flat LEVELS list that the flow code uses. */
-const FIXED_GAME=null;
+const FIXED_GAME='snake';
 const GAMES=[
  {id:'platformer',name:'De winkel',style:'Platformer',type:'platform',song:'feest',bpm:150,tr:0,
   blurb:'Spring als rode ballon door de winkel, over de spelden heen, en pak alle kaartjes.',
@@ -1073,13 +1072,14 @@ function renderNav(){
 (()=>{ const words=['Carnaval','Abraham & Sarah','Babyshower','Ballondecoraties','Verjaardagen','Sinterklaas','Halloween']; const el=$('typed'); if(!el) return; let wi=0,ci=words[0].length,del=false,wait=90;
   setInterval(()=>{ if(wait>0){ wait--; return; } const w=words[wi]; if(!del){ ci++; el.textContent=w.slice(0,ci); if(ci>=w.length){ del=true; wait=70; } } else { ci--; el.textContent=w.slice(0,ci); if(ci<=0){ del=false; wi=(wi+1)%words.length; wait=10; } } },55); })();
 /* ---------- hot reload snapshot ---------- */
-try{ window.claude?.hot?.snapshot?.(()=>({game:LV&&LV.game.id,li:LV&&LV.li,totalScore,state})); }catch(e){}
 function boot(data){
   if(document.fonts&&document.fonts.load) Promise.all([document.fonts.load('900 16px Grandstander'),document.fonts.load('700 16px Grandstander')]).catch(()=>{});
   requestAnimationFrame(loop);
   if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); }
 }
-window.__feest={play,step,draw:t=>{ctx.clearRect(0,0,W,H); if(MODE) MODE.draw(t);},keys,key:onKey,debug:()=>MODE&&MODE.debug?MODE.debug():null,LEVELS,GAMES,ACTIVE_GAMES,FIXED_GAME,get state(){return state},get frames(){return frames},get collected(){return collected},get lives(){return lives},get deadT(){return deadT},get tot(){return tot},get lvIdx(){return lvIdx},get LV(){return LV},mode:()=>MODE,win,items};
-window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? null);
+boot(null);
 })();
 </script>
+
+</body>
+</html>

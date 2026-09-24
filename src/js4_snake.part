@@ -3,7 +3,8 @@
 const Snake=(()=>{
   const SN={cells:[],prev:[],dir:{x:1,y:0},queue:[],timer:0,speed:13,grow:0,food:null,pins:[],coin:null,coinT:0,kassa:null,top:2};
   const SNCOL=['#FCB900','#8ED1FC','#7BDCB5','#9B51E0','#F78DA7','#FF6B6B'];
-  const speedFor=()=>Math.max(9,13-Math.floor(collected/3));
+  let D=null;
+  const speedFor=()=>Math.max(D.speedMin,D.speed0-Math.floor(collected/3));
   const cellFree=(x,y,margin)=>{ if(x<0||x>=COLS||y<SN.top||y>=ROWS) return false; if(SN.cells.some(c=>Math.abs(c.x-x)<=margin&&Math.abs(c.y-y)<=margin)) return false; if(SN.pins.some(p=>p.x===x&&p.y===y)) return false; if(SN.food&&SN.food.x===x&&SN.food.y===y) return false; if(SN.coin&&SN.coin.x===x&&SN.coin.y===y) return false; if(SN.kassa&&x>=SN.kassa.x&&x<SN.kassa.x+2&&y>=SN.kassa.y&&y<SN.kassa.y+2) return false; return true; };
   function randFree(margin){ for(let k=0;k<400;k++){ const x=1+Math.floor(Math.random()*(COLS-2)), y=SN.top+1+Math.floor(Math.random()*(ROWS-SN.top-2)); if(cellFree(x,y,margin)) return {x,y}; } return null; }
   function resetSnake(full){ SN.cells=[{x:8,y:9},{x:7,y:9},{x:6,y:9}]; SN.prev=SN.cells.map(c=>({...c})); SN.dir={x:1,y:0}; SN.queue=[]; SN.timer=0; SN.grow=0; SN.coin=null; SN.coinT=0;
@@ -15,7 +16,7 @@ const Snake=(()=>{
   const headPx=()=>({x:SN.cells[0].x*T+16,y:SN.cells[0].y*T+16});
   function step(){
     if(deadT){ afterDeath(); return; }
-    if(!SN.coin){ SN.coinT++; if(SN.coinT>300){ const c=randFree(1); if(c){ SN.coin={x:c.x,y:c.y,ph:0}; SN.coinT=0; } } }
+    if(!SN.coin){ SN.coinT++; if(SN.coinT>D.coinEvery){ const c=randFree(1); if(c){ SN.coin={x:c.x,y:c.y,ph:0}; SN.coinT=0; } } }
     SN.timer++; if(SN.timer<SN.speed) return; SN.timer=0;
     if(SN.queue.length){ const d=SN.queue.shift(); if(!(d.x===-SN.dir.x&&d.y===-SN.dir.y)) SN.dir=d; }
     const h=SN.cells[0], nx=h.x+SN.dir.x, ny=h.y+SN.dir.y; const hp=headPx();
@@ -28,7 +29,7 @@ const Snake=(()=>{
     if(SN.prev.length<SN.cells.length) SN.prev.push({...SN.prev[SN.prev.length-1]});
     const px=nx*T+16, py=ny*T+16;
     if(SN.food&&SN.food.x===nx&&SN.food.y===ny){ const i=SN.food.i; SN.food=null; collectItem(i,px,py); SN.grow+=2; SN.speed=speedFor();
-      for(let k=0;k<2;k++){ const c=randFree(3); if(c) SN.pins.push(c); }
+      for(let k=0;k<D.pinsPerItem;k++){ const c=randFree(3); if(c) SN.pins.push(c); }
       if(collected>=tot.items){ let c=null; for(let k=0;k<300&&!c;k++){ const x=1+Math.floor(Math.random()*(COLS-3)), y=SN.top+1+Math.floor(Math.random()*(ROWS-SN.top-3)); if(cellFree(x,y,2)&&cellFree(x+1,y,2)&&cellFree(x,y+1,2)&&cellFree(x+1,y+1,2)) c={x,y}; } SN.kassa=c||{x:14,y:8}; SN.pins=SN.pins.filter(p=>!(p.x>=SN.kassa.x-1&&p.x<=SN.kassa.x+2&&p.y>=SN.kassa.y-1&&p.y<=SN.kassa.y+2)); toast('Winkelwagen vol! Kruip naar de kassa 🛒'); }
       else spawnFood(); }
     if(SN.coin&&SN.coin.x===nx&&SN.coin.y===ny){ SN.coin=null; tot.coins++; collectCoin(px,py); SN.grow+=1; }
@@ -54,9 +55,10 @@ const Snake=(()=>{
   }
   return {
     buttons:[{id:'l',label:'◀',side:'l'},{id:'r',label:'▶',side:'l'},{id:'u',label:'▲',side:'r'},{id:'d',label:'▼',side:'r'}],
-    init(){ resetSnake(true); }, respawn(){ resetSnake(false); }, step, draw,
+    init(){ D=LV.diff; resetSnake(true); }, respawn(){ resetSnake(false); }, step, draw,
     key(code,down){ if(!down) return; const m={ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0],ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1]}[code]; if(m) setDir(m[0],m[1]); },
     touch(id,down){ if(!down) return; ({l:()=>setDir(-1,0),r:()=>setDir(1,0),u:()=>setDir(0,-1),d:()=>setDir(0,1)})[id]?.(); },
     stats(){ return [['Lengte van de slang',SN.cells.length+' ballonnen'],['Ballonnetjes',coinsGot],['Ballonnen over',lives]]; },
+    debug(){ return {SN,COLS,ROWS,diff:D}; },
   };
 })();

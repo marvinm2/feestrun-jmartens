@@ -3,11 +3,14 @@
 const Tetris=(()=>{
   const BW=10,BH=16,CS=30,OX=330,OY=40;
   const PIECES={I:{c:'#8ED1FC',n:4,cells:[[0,1],[1,1],[2,1],[3,1]]},O:{c:'#FCB900',n:2,cells:[[0,0],[1,0],[0,1],[1,1]]},T:{c:'#9B51E0',n:3,cells:[[1,0],[0,1],[1,1],[2,1]]},S:{c:'#7BDCB5',n:3,cells:[[1,0],[2,0],[0,1],[1,1]]},Z:{c:'#D20000',n:3,cells:[[0,0],[1,0],[1,1],[2,1]]},J:{c:'#F78DA7',n:3,cells:[[0,0],[0,1],[1,1],[2,1]]},L:{c:'#FF8A3D',n:3,cells:[[2,0],[0,1],[1,1],[2,1]]}};
-  const TZ={board:[],cur:null,next:null,bag:[],gravT:0,interval:64,lockT:0,lines:0,clearing:null,dasL:0,dasR:0,softT:0,combo:0,maxCombo:0,winT:0,anim:0};
+  let D=null;
+  const TZ={board:[],cur:null,next:null,bag:[],gravT:0,interval:64,lockT:0,lines:0,clearing:null,dasL:0,dasR:0,softT:0,combo:0,maxCombo:0,winT:0,anim:0,pieceN:0};
+  const GARB='#c9b8a8';
+  function freshBoard(){ TZ.board=Array.from({length:BH},()=>Array(BW).fill(null)); for(let k=0;k<(D.garbage||0);k++){ const y=BH-1-k, hole=Math.floor(Math.random()*BW); for(let x=0;x<BW;x++) TZ.board[y][x]=x===hole?null:GARB; } }
   const cellsOf=(p)=>{ const d=PIECES[p.type]; let cs=d.cells; for(let r=0;r<p.rot;r++) cs=cs.map(([x,y])=>[d.n-1-y,x]); return cs.map(([x,y])=>[x+p.x,y+p.y]); };
   const fits=(p)=>cellsOf(p).every(([x,y])=>x>=0&&x<BW&&y<BH&&(y<0||!TZ.board[y][x]));
   function fromBag(){ if(!TZ.bag.length){ TZ.bag=Object.keys(PIECES).sort(()=>Math.random()-.5); } return TZ.bag.pop(); }
-  function spawn(){ TZ.cur={type:TZ.next||fromBag(),rot:0,x:3,y:-1}; TZ.next=fromBag(); TZ.gravT=0; TZ.lockT=0; if(!fits(TZ.cur)){ TZ.cur=null; die(OX+BW*CS/2,OY+30); } }
+  function spawn(){ TZ.cur={type:TZ.next||fromBag(),rot:0,x:3,y:-1}; TZ.next=fromBag(); TZ.gravT=0; TZ.lockT=0; TZ.pieceN=(TZ.pieceN||0)+1; if(!fits(TZ.cur)){ TZ.cur=null; die(OX+BW*CS/2,OY+30); } }
   function tryMove(dx,dy){ const p={...TZ.cur,x:TZ.cur.x+dx,y:TZ.cur.y+dy}; if(fits(p)){ TZ.cur=p; return true; } return false; }
   function rotate(dir){ if(!TZ.cur||TZ.cur.type==='O') return; const rot=(TZ.cur.rot+dir+4)%4; for(const k of [0,-1,1,-2,2]){ const p={...TZ.cur,rot,x:TZ.cur.x+k}; if(fits(p)){ TZ.cur=p; TZ.lockT=Math.min(TZ.lockT,10); SFX.rotate(); return; } } }
   function lock(){ const p=TZ.cur; TZ.cur=null; const col=PIECES[p.type].c; let top=false; for(const [x,y] of cellsOf(p)){ if(y<0){ top=true; continue; } TZ.board[y][x]=col; } SFX.lock();
@@ -18,7 +21,7 @@ const Tetris=(()=>{
   function finishClear(){ const rows=TZ.clearing.rows; TZ.clearing=null;
     for(const y of rows){ TZ.board.splice(y,1); TZ.board.unshift(Array(BW).fill(null)); TZ.lines++; const it=nextItem(); if(it) collectItem(it.i,OX+BW*CS/2,OY+y*CS); }
     if(rows.length>1){ for(let k=1;k<rows.length;k++){ tot.coins++; collectCoin(OX+BW*CS/2+k*20,OY+rows[0]*CS); } }
-    TZ.interval=Math.max(24,64-TZ.lines*3);
+    TZ.interval=Math.max(D.intervalMin,D.interval0-TZ.lines*D.intervalStep);
     if(collected>=tot.items){ TZ.winT=70; return; }
     spawn(); }
   function step(){
@@ -31,7 +34,7 @@ const Tetris=(()=>{
     if(keys.r){ TZ.dasR++; if(TZ.dasR===1||(TZ.dasR>12&&(TZ.dasR-12)%4===0)){ if(tryMove(1,0)) SFX.move(); } } else TZ.dasR=0;
     if(keys.d){ TZ.softT++; if(TZ.softT%3===0){ if(tryMove(0,1)) TZ.gravT=0; } } else TZ.softT=0;
     TZ.gravT++; if(TZ.gravT>=TZ.interval){ TZ.gravT=0; tryMove(0,1); }
-    if(!fits({...TZ.cur,y:TZ.cur.y+1})){ TZ.lockT++; if(TZ.lockT>=34) lock(); } else TZ.lockT=0;
+    if(!fits({...TZ.cur,y:TZ.cur.y+1})){ TZ.lockT++; if(TZ.lockT>=D.lockDelay) lock(); } else TZ.lockT=0;
   }
   function drawBox(x,y,col,alpha=1,ghost=false){ ctx.save(); ctx.globalAlpha=alpha; if(ghost){ ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([4,3]); rr(x+3,y+3,CS-6,CS-6,4); ctx.stroke(); ctx.restore(); return; }
     ctx.fillStyle=col; rr(x+1,y+1,CS-2,CS-2,4); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.35)'; ctx.fillRect(x+3,y+3,CS-6,4); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(x+3,y+CS-7,CS-6,4);
@@ -64,10 +67,11 @@ const Tetris=(()=>{
   }
   return {
     buttons:[{id:'l',label:'◀',side:'l'},{id:'r',label:'▶',side:'l'},{id:'rot',label:'⟳',side:'r'},{id:'drop',label:'⤓',side:'r'}],
-    init(){ TZ.board=Array.from({length:BH},()=>Array(BW).fill(null)); TZ.bag=[]; TZ.next=null; TZ.lines=0; TZ.interval=64; TZ.clearing=null; TZ.combo=0; TZ.maxCombo=0; TZ.winT=0; TZ.dasL=TZ.dasR=TZ.softT=0; spawn(); },
-    respawn(){ TZ.board=Array.from({length:BH},()=>Array(BW).fill(null)); TZ.clearing=null; spawn(); }, step, draw,
+    init(){ D=LV.diff; freshBoard(); TZ.bag=[]; TZ.next=null; TZ.lines=0; TZ.interval=D.interval0; TZ.clearing=null; TZ.combo=0; TZ.maxCombo=0; TZ.winT=0; TZ.dasL=TZ.dasR=TZ.softT=0; TZ.pieceN=0; spawn(); },
+    respawn(){ freshBoard(); TZ.clearing=null; spawn(); }, step, draw,
     key(code,down){ if(!down||deadT||TZ.clearing||TZ.winT) return; if(code==='ArrowUp'||code==='KeyW'||code==='KeyX') rotate(1); else if(code==='KeyZ') rotate(-1); else if(code==='Space') hardDrop(); },
     touch(id,down){ if(id==='l') keys.l=down; else if(id==='r') keys.r=down; else if(down&&!deadT&&!TZ.clearing&&!TZ.winT){ if(id==='rot') rotate(1); else if(id==='drop') hardDrop(); } },
     stats(){ return [['Rijen ingepakt',TZ.lines],['Beste combo',TZ.maxCombo+' rijen tegelijk'],['Ballonnen over',lives]]; },
+    debug(){ return {TZ,BW,BH,PIECES,cellsOf,fits,diff:D}; },
   };
 })();

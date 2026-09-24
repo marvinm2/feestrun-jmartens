@@ -10,24 +10,25 @@ function play(idx,fresh){
   lives=3; coinsGot=0; frames=0; collected=0; particles=[]; popText=null; deadT=0; invT=0; shakeT=0; tot={items:10,coins:0};
   keys.l=keys.r=keys.u=keys.d=keys.j=false;
   MODE.init(); buildTouch(); updHud(); state='play'; musicStart(LV.song,LV.bpm,LV.tr);
-  toast(`Level ${idx+1} · ${LV.style}: ${LV.name}`,2600);
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.lvl==String(idx)));
+  toast(`Level ${LV.li+1} · ${LV.name} (${LV.sub})`,2600);
+  renderNav();
   cv.focus();
 }
-function restart(){ play(lvIdx,lvIdx===0); }
-function nextOrAgain(){ if(lvIdx<LEVELS.length-1) play(lvIdx+1,false); else play(0,true); }
+function restart(){ play(lvIdx,LV.li===0); }
+const lastOfGame=()=>LV.li===LV.game.levels.length-1;
+function nextOrAgain(){ if(!lastOfGame()) play(lvIdx+1,false); else play(lvIdx-LV.li,true); }
 function win(){
   if(state!=='play') return; state='win'; musicStop(); SFX.win(); burst(W/2,H/2,60,CONF,1.6);
   const sec=Math.floor(frames/60), bonus=Math.max(0,300-sec)*2, score=collected*100+coinsGot*10+bonus; totalScore+=score;
-  const last=lvIdx===LEVELS.length-1;
-  const rate=collected===tot.items?'Feestbeest! Alles gevonden 🎉':collected>=7?'Bijna compleet — nog even terugkomen?':'Kom je nog eens langs?';
-  $('winSub').textContent=last?'bedankt voor je bezoek':`level ${lvIdx+1} klaar · volgende: ${LEVELS[lvIdx+1].style.toLowerCase()} in "${LEVELS[lvIdx+1].name}"`;
-  $('btnAgain').textContent=last?'Nog een keer vanaf level 1':'Naar level '+(lvIdx+2)+' →';
-  $('receipt').innerHTML=`<div class="h"><img src="img/logo.png" alt="J-Martens.nl" style="height:34px;width:auto;display:block;margin:0 auto 4px"><small>online feestwinkel · Raamsdonk</small><small>kassabon · level ${lvIdx+1}: ${LV.name} (${LV.style})</small></div>`+
+  const last=lastOfGame(), nxt=last?null:LV.game.levels[LV.li+1];
+  const rate=collected===tot.items?'Feestbeest! Alles gevonden 🎉':collected>=Math.ceil(tot.items*0.7)?'Bijna compleet — nog even terugkomen?':'Kom je nog eens langs?';
+  $('winSub').textContent=last?`${LV.game.name} uitgespeeld · bedankt voor je bezoek`:`level ${LV.li+1} klaar · volgende: "${nxt.name}" (${nxt.sub})`;
+  $('btnAgain').textContent=last?'Nog een keer vanaf level 1':'Naar level '+(LV.li+2)+' →';
+  $('receipt').innerHTML=`<div class="h"><img src="img/logo.png" alt="J-Martens.nl" style="height:34px;width:auto;display:block;margin:0 auto 4px"><small>online feestwinkel · Raamsdonk</small><small>kassabon · ${LV.game.name} · level ${LV.li+1}: ${LV.name}</small></div>`+
     CATS.map((c,i)=>{const g=items[i].got; return `<div class="line${g?'':' miss'}"><span>${g?'✓':'–'} ${c.name}</span><span>${g?'1x':'niet gevonden'}</span></div>`;}).join('')+
     `<div style="height:6px"></div>`+MODE.stats().map(([k,v])=>`<div class="line"><span>${k}</span><span>${v}</span></div>`).join('')+
     `<div class="line"><span>Tijd</span><span>${fmt(frames)}</span></div><div class="line"><span>Snelheidsbonus</span><span>${bonus}</span></div>`+
-    `<div class="line tot"><span>Feestscore level ${lvIdx+1}</span><span>${score}</span></div>`+(last?`<div class="line tot"><span>Totaal alle levels</span><span>${totalScore}</span></div>`:'')+`<div class="rate">${rate}</div>`;
+    `<div class="line tot"><span>Feestscore level ${LV.li+1}</span><span>${score}</span></div>`+(last?`<div class="line tot"><span>Totaal ${LV.game.name}</span><span>${totalScore}</span></div>`:'')+`<div class="rate">${rate}</div>`;
   setTimeout(()=>{ $('ovWin').hidden=false; },900);
 }
 function step(){ if(state!=='play') return; frames++; if(frames%60===0) timeEl.textContent=fmt(frames); stepFx(); MODE.step(); }
@@ -38,13 +39,15 @@ function loop(ts){ if(!last) last=ts; let dt=ts-last; last=ts; if(dt>100) dt=100
 /* ---------- input ---------- */
 const NAV=['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
 const KEYMAP={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',Space:'j',KeyZ:'j'};
-addEventListener('keydown',e=>{ const tag=(e.target&&e.target.tagName)||''; if(NAV.includes(e.code)&&!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)) e.preventDefault(); if(e.repeat) return;
-  if(e.code==='KeyR'&&MODE){ restart(); return; } if(e.code==='KeyM'){ toggleMute(); return; }
-  if(e.code==='Enter'){ if(state==='title') start(); else if(state==='win') nextOrAgain(); else if(state==='over') restart(); return; }
-  if(state==='title'&&(e.code==='Space')){ start(); return; }
-  const k=KEYMAP[e.code]; if(k) keys[k]=true;
-  if(state==='play'&&MODE) MODE.key(e.code,true); });
-addEventListener('keyup',e=>{ const k=KEYMAP[e.code]; if(k) keys[k]=false; if(state==='play'&&MODE) MODE.key(e.code,false); });
+function onKey(code,down){
+  if(down){
+    if(code==='KeyR'&&MODE){ restart(); return; } if(code==='KeyM'){ toggleMute(); return; }
+    if(code==='Enter'){ if(state==='title') start(); else if(state==='win') nextOrAgain(); else if(state==='over') restart(); return; }
+    if(state==='title'&&code==='Space'){ start(); return; } }
+  const k=KEYMAP[code]; if(k) keys[k]=down;
+  if(state==='play'&&MODE) MODE.key(code,down); }
+addEventListener('keydown',e=>{ const tag=(e.target&&e.target.tagName)||''; if(NAV.includes(e.code)&&!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)) e.preventDefault(); if(e.repeat) return; onKey(e.code,true); });
+addEventListener('keyup',e=>onKey(e.code,false));
 addEventListener('blur',()=>{ keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) keys.l=keys.r=keys.u=keys.d=keys.j=false; });
 cv.tabIndex=0; cv.addEventListener('pointerdown',()=>{ cv.focus(); initAudio(); if(state==='play'&&MODE&&MODE.tap) MODE.tap(); });
@@ -56,22 +59,39 @@ function toggleMute(){ muted=!muted; const b=$('btnMute'); b.textContent=muted?'
 function start(){ play(0,true); }
 $('btnStart').onclick=start; $('btnAgain').onclick=nextOrAgain; $('btnRetry').onclick=restart; $('btnRestart').onclick=()=>{ if(MODE) restart(); else start(); }; $('btnMute').onclick=toggleMute;
 const logoLink=$('logoLink'); if(logoLink) logoLink.onclick=e=>{ e.preventDefault(); showTitle(); };
-// nav, level picker and level cards
+// nav bar, title-screen picker and level cards, all generated from GAMES/LEVELS
 const nav=$('nav'); nav.querySelector('[data-home]').onclick=showTitle;
-LEVELS.forEach((lv,i)=>{ const b=document.createElement('button'); b.type='button'; b.dataset.lvl=i; b.innerHTML=`<span class="n">${i+1}</span>${lv.name}`; b.onclick=()=>play(i,i===0); nav.appendChild(b);
-  const p=document.createElement('button'); p.type='button'; p.textContent='level '+(i+1); p.onclick=()=>play(i,i===0); $('lvlpick').appendChild(p);
-  const cards=$('levelCards'); if(cards){ const c=document.createElement('button'); c.type='button'; c.className='lv'; c.innerHTML=`<span class="n">Level ${i+1}</span> <span class="badge">${lv.style}</span><div class="t">${lv.name}</div><div class="s">${lv.hint}</div>`; c.onclick=()=>{ play(i,i===0); $('frame').scrollIntoView({behavior:'smooth',block:'center'}); }; cards.appendChild(c); } });
+const curGame=()=>LV?LV.game:ACTIVE_GAMES[0];
+const firstIdx=g=>LEVELS.findIndex(l=>l.game===g);
+function mkBtn(html,cls,on){ const b=document.createElement('button'); b.type='button'; b.innerHTML=html; if(cls) b.className=cls; b.onclick=on; return b; }
+function renderNav(){
+  const g=curGame();
+  [...nav.querySelectorAll('button:not([data-home])')].forEach(b=>b.remove());
+  if(!FIXED_GAME) for(const gm of ACTIVE_GAMES){ const b=mkBtn(gm.name,'game'+(gm===g?' cur':''),()=>play(firstIdx(gm),true)); b.dataset.game=gm.id; nav.appendChild(b); }
+  g.levels.forEach((lv,li)=>{ const i=firstIdx(g)+li; const b=mkBtn(`<span class="n">${li+1}</span>${lv.name}`,state==='play'&&i===lvIdx?'active':'',()=>play(i,li===0)); b.dataset.lvl=i; nav.appendChild(b); });
+}
+(function initPickers(){
+  const g=ACTIVE_GAMES[0];
+  const sub=$('titleSub'); if(sub) sub.textContent=FIXED_GAME?`${g.name} · ${g.style} · 3 levels`:`${ACTIVE_GAMES.length} spellen · 3 levels per spel · 1 winkelwagen`;
+  const txt=$('titleText'); if(txt&&FIXED_GAME) txt.innerHTML=`Jij bent de rode ballon van J-Martens. Verzamel in elk level alle <b>10 productcategorieën</b>, ontwijk de <b>spelden</b> en reken af bij de <b>kassa</b>. Drie levels: <b>makkelijk</b>, <b>gemiddeld</b> en <b>moeilijk</b>.`;
+  const pick=$('lvlpick');
+  if(FIXED_GAME) g.levels.forEach((lv,li)=>pick.appendChild(mkBtn(`level ${li+1} · ${lv.sub}`,'',()=>play(li,li===0))));
+  else ACTIVE_GAMES.forEach(gm=>pick.appendChild(mkBtn(gm.name,'',()=>play(firstIdx(gm),true))));
+  const cards=$('levelCards');
+  if(cards) LEVELS.forEach((lv,i)=>{ const c=mkBtn(`<span class="n">Level ${lv.li+1}</span> <span class="badge">${FIXED_GAME?lv.sub:lv.style+' · '+lv.sub}</span><div class="t">${lv.name}</div><div class="s">${lv.hint}</div>`,'lv',()=>{ play(i,lv.li===0); $('frame').scrollIntoView({behavior:'smooth',block:'center'}); }); cards.appendChild(c); });
+  renderNav();
+})();
 // typed slogan like the shop's header
 (()=>{ const words=['Carnaval','Abraham & Sarah','Babyshower','Ballondecoraties','Verjaardagen','Sinterklaas','Halloween']; const el=$('typed'); if(!el) return; let wi=0,ci=words[0].length,del=false,wait=90;
   setInterval(()=>{ if(wait>0){ wait--; return; } const w=words[wi]; if(!del){ ci++; el.textContent=w.slice(0,ci); if(ci>=w.length){ del=true; wait=70; } } else { ci--; el.textContent=w.slice(0,ci); if(ci<=0){ del=false; wi=(wi+1)%words.length; wait=10; } } },55); })();
 /* ---------- hot reload snapshot ---------- */
-try{ window.claude?.hot?.snapshot?.(()=>({lvIdx,totalScore,state})); }catch(e){}
+try{ window.claude?.hot?.snapshot?.(()=>({game:LV&&LV.game.id,li:LV&&LV.li,totalScore,state})); }catch(e){}
 function boot(data){
   if(document.fonts&&document.fonts.load) Promise.all([document.fonts.load('900 16px Grandstander'),document.fonts.load('700 16px Grandstander')]).catch(()=>{});
   requestAnimationFrame(loop);
-  if(data&&data.state==='play'&&typeof data.lvIdx==='number'){ totalScore=data.totalScore||0; play(Math.min(LEVELS.length-1,Math.max(0,data.lvIdx)),false); toast('Spel bijgewerkt: level opnieuw gestart'); }
+  if(data&&data.state==='play'){ const i=LEVELS.findIndex(l=>l.game.id===data.game&&l.li===data.li); totalScore=data.totalScore||0; play(i<0?0:i,false); toast('Spel bijgewerkt: level opnieuw gestart'); }
 }
-window.__feest={play,step,draw:t=>{ctx.clearRect(0,0,W,H); if(MODE) MODE.draw(t);},keys,get state(){return state},get frames(){return frames},get collected(){return collected},get lives(){return lives},mode:()=>MODE,win,items};
+window.__feest={play,step,draw:t=>{ctx.clearRect(0,0,W,H); if(MODE) MODE.draw(t);},keys,key:onKey,debug:()=>MODE&&MODE.debug?MODE.debug():null,LEVELS,GAMES,ACTIVE_GAMES,FIXED_GAME,get state(){return state},get frames(){return frames},get collected(){return collected},get lives(){return lives},get deadT(){return deadT},get tot(){return tot},get lvIdx(){return lvIdx},get LV(){return LV},mode:()=>MODE,win,items};
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? null);
 })();
 </script>

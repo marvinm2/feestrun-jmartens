@@ -1,0 +1,43 @@
+
+/* ================= GAMES & LEVELS =================
+   Four games, three levels each. FIXED_GAME is null in artifact.html (all games, with a game
+   switcher) and is rewritten by build_site.py to one game id per website page.
+   Level-only fields (name, sub, segs, night, diff, bpm/tr overrides) are merged over the game
+   fields into the flat LEVELS list that the flow code uses. */
+const FIXED_GAME=null;
+const GAMES=[
+ {id:'platformer',name:'De winkel',style:'Platformer',type:'platform',song:'feest',bpm:150,tr:0,
+  blurb:'Spring als rode ballon door de winkel, over de spelden heen, en pak alle kaartjes.',
+  hint:'◀ ▶ lopen, ▲/spatie springen (ingedrukt houden = hoger). Spring over de spelden en pak de kaartjes.',
+  levels:[
+   {name:'Openingstijd',sub:'makkelijk',segs:SEGS_P1,night:false,diff:{enemySpd:1.1,moverRate:0.020}},
+   {name:'Koopavond',sub:'gemiddeld',segs:SEGS_P2,night:false,diff:{enemySpd:1.5,moverRate:0.026}},
+   {name:'Het magazijn bij nacht',sub:'moeilijk',segs:SEGS_P3,night:true,bpm:168,tr:2,diff:{enemySpd:1.9,moverRate:0.032}},
+  ]},
+ {id:'flappy',name:'Ballonvlucht',style:'Flappy',type:'flappy',song:'feest',bpm:160,tr:3,
+  blurb:'Flap tussen de rollen cadeaupapier door en vang de kaartjes in de vlucht.',
+  hint:'Tik of druk op ▲/spatie om te flappen. Vlieg tussen de rollen cadeaupapier door en pak de kaartjes.',
+  levels:[
+   {name:'Zacht briesje',sub:'makkelijk',diff:{gapH:280,gapStep:3,gapMin:250,gateDx:360,speed0:2.2,speedInc:0.06,speedMax:3.0}},
+   {name:'Stevige wind',sub:'gemiddeld',diff:{gapH:250,gapStep:4,gapMin:220,gateDx:330,speed0:2.5,speedInc:0.09,speedMax:3.6}},
+   {name:'Storm',sub:'moeilijk',diff:{gapH:230,gapStep:5,gapMin:200,gateDx:300,speed0:2.8,speedInc:0.11,speedMax:4.2}},
+  ]},
+ {id:'snake',name:'De ballonnenslang',style:'Snake',type:'snake',song:'feest',bpm:140,tr:-2,
+  blurb:'Eet de kaartjes, groei als ballonnenslang en ontwijk de spelden op de winkelvloer.',
+  hint:'Stuur met de pijltjes. Eet de kaartjes, mijd de spelden, de muur en jezelf.',
+  levels:[
+   {name:'Op je gemak',sub:'makkelijk',diff:{speed0:15,speedMin:11,pinsPerItem:1,coinEvery:300}},
+   {name:'Drukte in de winkel',sub:'gemiddeld',diff:{speed0:13,speedMin:9,pinsPerItem:2,coinEvery:300}},
+   {name:'Speldenkussen',sub:'moeilijk',diff:{speed0:11,speedMin:7,pinsPerItem:3,coinEvery:240}},
+  ]},
+ {id:'tetris',name:'Dozen inpakken',style:'Tetris',type:'tetris',song:'tetris',bpm:150,tr:0,
+  blurb:'Stapel de dozen strak in. Elke volle rij is een verzonden bestelling.',
+  hint:'◀ ▶ schuiven, ▲ draaien, ▼ sneller, spatie laten vallen. Elke volle rij is een verzonden bestelling.',
+  levels:[
+   {name:'Rustige ochtend',sub:'makkelijk',diff:{interval0:72,intervalMin:36,intervalStep:3,lockDelay:40,garbage:0}},
+   {name:'Middagdrukte',sub:'gemiddeld',diff:{interval0:64,intervalMin:24,intervalStep:3,lockDelay:34,garbage:0}},
+   {name:'Voor 15 uur besteld!',sub:'moeilijk',diff:{interval0:52,intervalMin:16,intervalStep:4,lockDelay:26,garbage:2}},
+  ]},
+];
+const ACTIVE_GAMES=FIXED_GAME?GAMES.filter(g=>g.id===FIXED_GAME):GAMES;
+const LEVELS=ACTIVE_GAMES.flatMap((g,gi)=>g.levels.map((l,li)=>({...g,...l,game:g,gi,li,levels:undefined})));

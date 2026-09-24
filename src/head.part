@@ -15,6 +15,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-bo
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:700;font-size:13px;color:#333}
 .top .links{display:flex;gap:18px;flex-wrap:wrap}
 .top .links span::before{content:"● ";color:var(--red)}
+.top .links a{color:var(--red);text-decoration:none}
+.top .links a:hover{text-decoration:underline}
 .top .tools{display:flex;gap:8px}
 .top .tools button{font:700 12px var(--font-display);background:#fff;border:2px solid var(--red);color:var(--red);border-radius:999px;padding:5px 12px;cursor:pointer}
 .top .tools button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -34,6 +36,11 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-bo
 .nav button .n{font-size:11px;background:#fff;color:var(--red);border-radius:999px;padding:1px 7px;font-weight:900}
 .nav button.active{background:rgba(0,0,0,.25)}
 .nav button.home{font-weight:900}
+.nav button.game{font-weight:900;border-bottom:3px solid transparent}
+.nav button.game.cur{border-bottom-color:#fff}
+.nav button.game+button:not(.game){margin-left:auto}
+.nav a{color:#fff;text-decoration:none;padding:11px 18px;display:flex;align-items:center;gap:8px}
+.nav a:hover,.nav a:focus-visible{background:rgba(0,0,0,.18);outline:none}
 .xline{display:flex;align-items:center;gap:14px;font-family:var(--font-display);font-weight:900;color:var(--red);font-size:24px;margin:22px 0 12px;letter-spacing:.3px}
 .xline::before,.xline::after{content:"";flex:1;height:8px;background:radial-gradient(circle,var(--red) 1.6px,transparent 2px) 0 50%/9px 8px repeat-x}
 /* frame */
@@ -95,6 +102,8 @@ kbd{font-family:var(--font-body);font-weight:700;background:var(--paper-2);borde
 .levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .lv{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px;cursor:pointer;text-align:left;font-family:var(--font-body);box-shadow:0 2px 8px rgba(120,0,0,.06);transition:transform .15s,box-shadow .15s}
 .lv:hover,.lv:focus-visible{transform:translateY(-2px);box-shadow:0 6px 16px rgba(120,0,0,.14);outline:none}
+a.lv{display:block;text-decoration:none;color:inherit}
+.lv .pic{display:block;width:100%;height:auto;border-radius:4px;margin:-4px 0 8px;background:#FFF6F3;border:1px solid var(--line)}
 .lv .t{font-family:var(--font-display);font-weight:900;color:var(--red);font-size:17px;margin:4px 0 2px}
 .lv .s{font-size:12px;color:var(--muted);line-height:1.4}
 .lv .n{display:inline-block;background:var(--red);color:#fff;font-family:var(--font-display);font-weight:900;font-size:11px;padding:2px 8px;border-radius:999px}
@@ -106,7 +115,7 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
 
 <div class="wrap">
   <div class="top">
-    <div class="links"><span>online feestwinkel</span><span>Raamsdonk</span><span>info@j-martens.nl</span></div>
+    <div class="links"><span>online feestwinkel</span><span>Raamsdonk</span><span>info@j-martens.nl</span><span><a href="index.html">Alle spelletjes</a></span></div>
     <div class="tools"><button id="btnMute" type="button" aria-pressed="false">🔊 Geluid</button><button id="btnRestart" type="button">↻ Level opnieuw</button></div>
   </div>
   <div class="brandbar">
@@ -135,8 +144,8 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
     <div class="overlay" id="ovTitle">
       <div class="panel">
         <img class="tlogo" src="img/logo.png" alt="J-Martens.nl" width="200" height="57">
-        <h1>Feestrun <span>5 levels · 4 spelstijlen · 1 winkelwagen</span></h1>
-        <p>Jij bent de rode ballon van J-Martens. Verzamel in elk level alle <b>10 productcategorieën</b>, ontwijk de <b>spelden</b> en reken af bij de <b>kassa</b>. Elk level is een ander soort spel!</p>
+        <h1>Feestrun <span id="titleSub">4 spellen · 3 levels per spel · 1 winkelwagen</span></h1>
+        <p id="titleText">Jij bent de rode ballon van J-Martens. Verzamel in elk level alle <b>10 productcategorieën</b>, ontwijk de <b>spelden</b> en reken af bij de <b>kassa</b>. Elk spel heeft drie levels: makkelijk, gemiddeld en moeilijk.</p>
         <div class="thumbs" id="titleThumbs"></div>
         <div class="keys"><span><kbd>◀</kbd> <kbd>▶</kbd> <kbd>▲</kbd> <kbd>▼</kbd> sturen</span><span><kbd>spatie</kbd> springen / flappen / laten vallen</span><span><kbd>R</kbd> opnieuw</span><span><kbd>M</kbd> geluid</span></div>
         <button class="btn" id="btnStart" type="button">Start de feestrun!</button>

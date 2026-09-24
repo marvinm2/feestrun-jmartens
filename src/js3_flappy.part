@@ -1,15 +1,16 @@
 
 /* ================= MODE: FLAPPY (Ballonvlucht) ================= */
 const Flappy=(()=>{
-  const GR=0.30, FLAP=-6.2, SPEED0=2.5, GATE_DX=330, FLOOR=H-44, CEIL=44, RW=64;
-  const F={x:230,y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:0,speed:SPEED0,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false};
-  function makeGate(x){ const n=F.gateN++; let kind='coin'; const gapH=n<3?250:n<8?230:215;
+  const GR=0.30, FLAP=-6.2, FLOOR=H-44, CEIL=44, RW=64;
+  let D=null;
+  const F={x:230,y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:0,speed:2.5,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false};
+  function makeGate(x){ const n=F.gateN++; let kind='coin'; const gapH=Math.max(D.gapMin,D.gapH-n*D.gapStep);
     if(collected+F.gates.filter(g=>g.kind==='item'&&!g.taken).length>=tot.items){ if(!F.kassaDone){ F.kassaDone=true; return {x,kind:'kassa',gapY:CEIL,gapH:FLOOR-CEIL,taken:false,passed:false}; } kind='coin'; }
     else if(n%3===1){ kind='item'; }
     const gapY=CEIL+40+Math.random()*(FLOOR-CEIL-80-gapH);
     const it=kind==='item'?items.find(o=>!o.got&&!F.gates.some(g=>g.kind==='item'&&!g.taken&&g.i===o.i)):null;
     return {x,gapY,gapH,kind,i:it?it.i:-1,taken:false,passed:false,ph:Math.random()*6}; }
-  function fill(){ while(F.nextX<F.wx+W+200){ F.gates.push(makeGate(F.nextX)); F.nextX+=GATE_DX; } F.gates=F.gates.filter(g=>g.x>F.wx-200); }
+  function fill(){ while(F.nextX<F.wx+W+200){ F.gates.push(makeGate(F.nextX)); F.nextX+=D.gateDx; } F.gates=F.gates.filter(g=>g.x>F.wx-200); }
   function flap(){ if(state!=='play'||deadT) return; F.flapReq=true; }
   function step(){
     if(deadT){ afterDeath(); return; }
@@ -28,7 +29,7 @@ const Flappy=(()=>{
         if(hitX&&(by-r<g.gapY||by+r>g.gapY+g.gapH)){ die(F.x,F.y-16); return; }
       }
       const cx=g.x+RW/2, cy=g.gapY+g.gapH/2;
-      if(!g.taken&&g.kind!=='kassa'&&Math.hypot(bx-cx,by-cy)<30){ g.taken=true; if(g.kind==='item'&&g.i>=0){ collectItem(g.i,F.x,F.y-16); F.speed=Math.min(3.6,F.speed+0.09); } else collectCoin(F.x,F.y-16); }
+      if(!g.taken&&g.kind!=='kassa'&&Math.hypot(bx-cx,by-cy)<30){ g.taken=true; if(g.kind==='item'&&g.i>=0){ collectItem(g.i,F.x,F.y-16); F.speed=Math.min(D.speedMax,F.speed+D.speedInc); } else collectCoin(F.x,F.y-16); }
       if(g.kind==='kassa'&&bx>g.x+20){ win(); return; }
       if(!g.passed&&bx>g.x+RW){ g.passed=true; F.passed++; }
     }
@@ -58,10 +59,11 @@ const Flappy=(()=>{
   }
   return {
     buttons:[{id:'j',label:'▲ FLAP',cls:'wide',side:'r'}],
-    init(){ Object.assign(F,{y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:620,speed:SPEED0,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false}); fill(); },
+    init(){ D=LV.diff; Object.assign(F,{y:H/2,vy:0,rot:0,wx:0,gates:[],nextX:620,speed:D.speed0,started:false,anim:0,passed:0,flapReq:false,gateN:0,kassaDone:false}); fill(); },
     respawn, step, draw, tap:flap,
     key(code,down){ if(down&&['ArrowUp','KeyW','Space','KeyZ'].includes(code)) flap(); },
     touch(id,down){ if(id==='j'&&down) flap(); },
     stats(){ return [['Poortjes gehaald',F.passed],['Ballonnetjes',coinsGot],['Ballonnen over',lives]]; },
+    debug(){ return {F,diff:D,consts:{GR,FLAP,FLOOR,CEIL,RW,W,H}}; },
   };
 })();

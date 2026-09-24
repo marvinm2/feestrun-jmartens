@@ -2,7 +2,7 @@
 /* ================= MODE: PLATFORMER ================= */
 const Platform=(()=>{
   const G=0.5,JUMP=12,JUMP_CUT=4,MAXV=4.2,SPRING=19,COYOTE=10,JBUF=12;
-  let LW=0,LPX=0,tiles=null,L=null,camX=0,camLead=0,respawnAt=null;
+  let LW=0,LPX=0,tiles=null,L=null,camX=0,camLead=0,respawnAt=null,D=null;
   const P={x:0,y:0,w:32,h:38,vx:0,vy:0,face:1,grounded:false,coyote:0,jbuf:0,onPlat:null,sx:1,sy:1,anim:0,jumping:false};
   const tileAt=(cx,cy)=>{ if(cx<0||cx>=LW) return 1; if(cy<0||cy>=ROWS) return 0; return tiles[cy*LW+cx]; };
   function build(){
@@ -15,9 +15,9 @@ const Platform=(()=>{
         else if(ch==='o') L.coins.push({x:px+16,y:py+16,got:false,ph:Math.random()*6});
         else if(ch>='0'&&ch<='9') L.items.push({i:+ch,x:px+16,y:py+16,ph:Math.random()*6});
         else if(ch==='S') L.springs.push({x:px,y:py,t:0});
-        else if(ch==='P') L.enemies.push({x:px+1,y:py+T-22,w:30,h:22,dir:-1,spd:1.1,t:0});
-        else if(ch==='M') L.movers.push({x0:px,y0:py,x:px,y:py,w:96,h:14,axis:'x',amp:96,t:Math.random()*6,dx:0,dy:0});
-        else if(ch==='N') L.movers.push({x0:px,y0:py,x:px,y:py,w:96,h:14,axis:'y',amp:64,t:Math.random()*6,dx:0,dy:0});
+        else if(ch==='P') L.enemies.push({x:px+1,y:py+T-22,w:30,h:22,dir:-1,spd:D.enemySpd,t:0});
+        else if(ch==='M') L.movers.push({x0:px,y0:py,x:px,y:py,w:96,h:14,axis:'x',amp:96,t:L.movers.length*Math.PI/2,dx:0,dy:0});
+        else if(ch==='N') L.movers.push({x0:px,y0:py,x:px,y:py,w:96,h:14,axis:'y',amp:64,t:L.movers.length*Math.PI/2,dx:0,dy:0});
         else if(ch==='F') L.flags.push({x:px,y:py,active:false,t:0});
         else if(ch==='K') L.kassa={x:px,y:py-T}; } }
   }
@@ -25,7 +25,7 @@ const Platform=(()=>{
   const jumpHeld=()=>keys.j||keys.u;
   function step(){
     if(deadT){ afterDeath(); return; }
-    for(const m of L.movers){ m.t+=0.022; const ox=m.x,oy=m.y; if(m.axis==='x') m.x=m.x0+Math.sin(m.t)*m.amp; else m.y=m.y0+Math.sin(m.t)*m.amp; m.dx=m.x-ox; m.dy=m.y-oy; }
+    for(const m of L.movers){ m.t+=D.moverRate; const ox=m.x,oy=m.y; if(m.axis==='x') m.x=m.x0+Math.sin(m.t)*m.amp; else m.y=m.y0+Math.sin(m.t)*m.amp; m.dx=m.x-ox; m.dy=m.y-oy; }
     for(const e of L.enemies){ e.t++; e.x+=e.dir*e.spd; const fx=e.dir>0?e.x+e.w+1:e.x-1; const cx=Math.floor(fx/T), cym=Math.floor((e.y+e.h/2)/T), cyb=Math.floor((e.y+e.h+1)/T);
       if(tileAt(cx,cym)===1) e.dir*=-1; else { const b=tileAt(cx,cyb); if(b!==1&&b!==2) e.dir*=-1; } }
     for(const s of L.springs) s.t*=0.85;
@@ -105,10 +105,11 @@ const Platform=(()=>{
   }
   return {
     buttons:[{id:'l',label:'◀',side:'l'},{id:'r',label:'▶',side:'l'},{id:'j',label:'▲',side:'r'}],
-    init(){ build(); tot.coins=L.coins.length; respawnAt={x:L.start.x,y:L.start.y}; place(); },
+    init(){ D=LV.diff; build(); tot.coins=L.coins.length; respawnAt={x:L.start.x,y:L.start.y}; place(); },
     respawn(){ place(); }, step, draw,
     key(code,down){ if(down&&['ArrowUp','KeyW','Space','KeyZ'].includes(code)) P.jbuf=JBUF; },
     touch(id,down){ if(id==='l') keys.l=down; else if(id==='r') keys.r=down; else if(id==='j'){ if(down) P.jbuf=JBUF; keys.j=down; } },
     stats(){ return [['Ballonnetjes',coinsGot+' / '+tot.coins],['Ballonnen over',lives]]; },
+    debug(){ return {P,L,tiles,LW,LPX,respawnAt,diff:D,consts:{G,JUMP,JUMP_CUT,MAXV,SPRING,COYOTE,JBUF,T,COLS,ROWS,W,H},tileAt}; },
   };
 })();
