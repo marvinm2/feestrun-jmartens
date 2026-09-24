@@ -89,12 +89,14 @@ open('dist/feestrun-jmartens/LEESMIJ.txt', 'w').write(f'''FEESTRUN – spelletje
 INHOUD VAN DE MAP "feestrun"
   index.html            Startpagina met kop, logo, rode balk en de vier spelletjes.
                         Te gebruiken als eigen pagina, bijv. https://j-martens.nl/feestrun/
-  platformer.html       Spel 1 "De winkel" (platformer), 3 levels
-  flappy.html           Spel 2 "Ballonvlucht" (flappy), 3 levels
-  snake.html            Spel 3 "De ballonnenslang" (snake), 3 levels
-  tetris.html           Spel 4 "Dozen inpakken" (tetris), 3 levels
+  platformer.html       "De winkel" (platformer), 3 levels
+  flappy.html           "Ballonvlucht" (flappy), 3 levels
+  snake.html            "De ballonnenslang" (snake), 3 levels
+  tetris.html           "Dozen inpakken" (tetris), 3 levels
   <spel>-embed.html     Compacte versie van elk spel (alleen spel + levelbalk) om in een
                         WordPress-pagina te zetten via een iframe.
+  Komen er later spelletjes bij, dan zijn dat gewoon extra bestanden in deze map en
+  een extra kaartje op de startpagina; de bestaande bestanden blijven werken.
   img/                  Het logo (logo.png, favicon.png) en de 10 categoriebeelden (320x320 jpg).
                         Vervang een beeld door een nieuw bestand met dezelfde naam als een
                         categoriefoto verandert.
@@ -130,7 +132,10 @@ GOED OM TE WETEN
   - Geluid en muziek starten pas na de eerste klik of toetsaanslag; dat is een
     regel van browsers, geen fout.
   - Werkt op computer (pijltjes, spatie, R, M) en op telefoon/tablet (knoppen
-    onder in beeld).
+    onder het speelveld). Op een telefoon is het speelveld het grootst als je
+    hem een kwartslag draait; het spel zegt dat zelf ook.
+  - Een level direct openen kan met ?level=2 achter de bestandsnaam, bijv.
+    https://j-martens.nl/feestrun/flappy.html?level=2
   - Elk spel heeft drie levels: makkelijk, gemiddeld en moeilijk. Elk level eindigt
     met een kassabon; na level 3 staat ook de totaalscore van het spel op de bon.
       De winkel:          Openingstijd · Koopavond · Het magazijn bij nacht
