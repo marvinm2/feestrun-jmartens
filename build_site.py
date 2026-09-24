@@ -12,8 +12,8 @@ Joins the parts in src/ into one script and writes:
 """
 import os, re, shutil, zipfile
 
-VERSION = '2.0'
-DATE = '24 september 2026'
+VERSION = '2.1'
+DATE = '25 september 2026'
 PARTS = ['head.part', 'js1.part', 'segs.part', 'levels.part', 'js2_platform.part', 'js3_flappy.part',
          'js4_snake.part', 'js5_tetris.part', 'js6_flow.part']
 GAMES = [  # id, page title part, meta description
