@@ -45,4 +45,4 @@ Zie `dist/feestrun-jmartens/LEESMIJ.txt`: map `feestrun` uploaden naar de hoofdm
 site en linken naar `feestrun/`, of per spel een iframe naar `<spel>-embed.html`.
 
 ## Online proefversie
-https://claude.ai/artifact/XGUGDbMRKymS59KVtGPM3e (privé, deelbaar via Share)
+https://marvinm2.github.io/feestrun-jmartens/ (GitHub Pages, vanuit `docs/` op `main`; elke push bouwt de site opnieuw)

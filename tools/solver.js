@@ -146,15 +146,15 @@ function solveMap(segs, diff, opts = {}) {
   };
   let cur = sim.startState();
   const out = []; const allInputs = []; let ok = true;
-  for (const g of goals) {
-    const gx = g.x + g.w / 2, gy = g.y + g.h / 2;
-    const t0 = cur[4];
+  // one best-first search for one goal; returns {found, foundKey, parent, n, best, bestS, maxS}
+  function searchGoal(g, heur, budget) {
+    const gx = g.x + g.w / 2, gy = g.y + g.h / 2, t0 = cur[4];
     const h = heur === 'greedy'
       ? s => Math.abs(s[0] + PW / 2 - gx) + Math.abs(s[1] + PH / 2 - gy) * 1.5 + (s[4] - t0) * 0.02
       : s => { const dx = Math.abs(s[0] + PW / 2 - gx), dy = Math.abs(s[1] + PH / 2 - gy);
           // height only counts when close to the goal; far away the ground route must not lose to airborne states
-          return dx + dy * 1.5 * Math.max(0.15, 1 - dx / 320) + (s[4] - t0) * (heur === 'astar' ? 0.5 : 0.02); };
-    const parent = new Map(); // key -> [parentKey, inputIndex]
+          return dx + dy * 1.5 * Math.max(0.15, 1 - dx / 320) + (s[4] - t0) * 0.02; };
+    const parent = new Map(); // key -> [parentKey, inputIndex, frames]
     const k0 = key(cur); parent.set(k0, null);
     const heap = [];
     const push = (pr, st) => { heap.push([pr, st]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
@@ -179,20 +179,27 @@ function solveMap(segs, diff, opts = {}) {
         }
       }
     }
-    if (!found) {
+    return { found, foundKey, parent, n, best, bestS, maxS };
+  }
+  // portfolio: the proximity heuristic first (ground routes), then the plain greedy one (fast descents), small budgets before big ones
+  const plan = opts.heur ? [[opts.heur, budget]] : [['prox', budget / 8], ['greedy', budget / 8], ['prox', budget], ['greedy', budget]];
+  for (const g of goals) {
+    let r = null, explored = 0;
+    for (const [heur, b] of plan) { r = searchGoal(g, heur, b); explored += r.n; if (r.found) break; }
+    if (!r.found) {
       ok = false;
       const fmt = s => ({ col: +(s[0] / T).toFixed(1), row: +((s[1] + PH) / T).toFixed(2), t: s[4], grounded: s[5] });
-      out.push({ name: g.name, ok: false, explored: n, best: bestS && { ...fmt(bestS), dist: Math.round(best) }, maxX: fmt(maxS) });
+      out.push({ name: g.name, ok: false, explored, best: r.bestS && { ...fmt(r.bestS), dist: Math.round(r.best) }, maxX: fmt(r.maxS) });
       break;
     }
     // reconstruct inputs for this goal
-    const seq = []; let k = foundKey;
-    while (parent.get(k)) { const [pk, ii, len] = parent.get(k); for (let j = 0; j < len; j++) seq.push(INPUTS[ii]); k = pk; }
+    const seq = []; let k = r.foundKey;
+    while (r.parent.get(k)) { const [pk, ii, len] = r.parent.get(k); for (let j = 0; j < len; j++) seq.push(INPUTS[ii]); k = pk; }
     seq.reverse();
     // the key-based chain may not be the exact state chain; re-simulate to make sure and to get the exact end state
-    let s2 = cur; for (const [l, r, j] of seq) { s2 = stepState(s2, l, r, j); if (!s2) break; }
-    if (!s2 || !overlap(s2[0], s2[1], PW, PH, g.x, g.y, g.w, g.h)) { ok = false; out.push({ name: g.name, ok: false, explored: n, error: 'replayed input chain does not reach the goal (key aliasing)' }); break; }
-    out.push({ name: g.name, ok: true, frames: s2[4], explored: n });
+    let s2 = cur; for (const [l, r2, j] of seq) { s2 = stepState(s2, l, r2, j); if (!s2) break; }
+    if (!s2 || !overlap(s2[0], s2[1], PW, PH, g.x, g.y, g.w, g.h)) { ok = false; out.push({ name: g.name, ok: false, explored, error: 'replayed input chain does not reach the goal (key aliasing)' }); break; }
+    out.push({ name: g.name, ok: true, frames: s2[4], explored });
     for (const inp of seq) allInputs.push(inp);
     cur = s2;
   }

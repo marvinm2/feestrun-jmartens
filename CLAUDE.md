@@ -9,9 +9,10 @@ for the webshop J-Martens.nl. Platformer, flappy, snake and tetris, each with th
 rising difficulty. All player-facing text is Dutch and the visual identity is fixed
 (Grandstander/Roboto, red `#D20000`, the real logo in `src/img/`).
 
-This repo has a **public GitHub remote** (`marvinm2/feestrun-jmartens`) even though it sits inside
-the private `Prive/` tree. Nothing from the household documents may end up here. English for code
-and commits, Dutch for anything a player or the shop owner reads (UI strings, `LEESMIJ.txt`, README).
+This repo has a **GitHub remote** (`marvinm2/feestrun-jmartens`, currently private, served via
+GitHub Pages from `docs/` on `main`) even though it sits inside the private `Prive/` tree. Treat it
+as public: nothing from the household documents may end up here. English for code and commits,
+Dutch for anything a player or the shop owner reads (UI strings, `LEESMIJ.txt`, README).
 
 ## Commands
 
@@ -24,7 +25,7 @@ node tools/solve_final.js [SEGS_P2]                              # solver report
 
 Always build before testing: the harness refuses a stale `artifact.html`. There is no linter or
 dev server; to play a build, serve `dist/feestrun-jmartens/feestrun/` over HTTP (e.g.
-`python3 -m http.server`) and open `index.html`. Fonts come from Google Fonts.
+`python3 -m http.server`) and open `index.html`, or use the GitHub Pages site after a push. Fonts come from Google Fonts.
 
 ## Build pipeline (build_site.py)
 
