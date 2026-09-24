@@ -60,11 +60,12 @@ canvas{display:block;width:100%;height:100%}
 .stat .k{font-size:10px;color:var(--muted);font-weight:900;letter-spacing:.6px}
 .life{width:14px;height:17px;border-radius:50% 50% 50% 50%/45% 45% 55% 55%;background:radial-gradient(circle at 35% 30%,#ff9a9a,var(--red) 55%,var(--red-dark));display:inline-block;margin-right:2px}
 .life.lost{background:#ddd}
-.pickup{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(0);opacity:0;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
-.pickup img{width:150px;height:150px;border-radius:12px;border:5px solid #fff;box-shadow:0 8px 24px rgba(120,0,0,.3)}
-.pickup .name{background:var(--red);color:#fff;font-size:24px;font-weight:900;padding:4px 18px;border-radius:8px;transform:rotate(-3deg);box-shadow:0 4px 0 var(--red-dark);white-space:nowrap}
-.pickup.show{animation:pick 1.4s ease-out forwards}
-@keyframes pick{0%{transform:translate(-50%,-50%) scale(0);opacity:0}15%{transform:translate(-50%,-50%) scale(1.1);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}75%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-70%) scale(.6);opacity:0}}
+/* card notification: small, top-right under the score, so it never hides what is coming */
+.pickup{position:absolute;right:10px;top:50px;transform:translateX(130%);opacity:0;display:flex;flex-direction:row;align-items:center;gap:8px;pointer-events:none;background:rgba(255,255,255,.92);border:2px solid var(--red);border-radius:12px;padding:4px 10px 4px 4px;box-shadow:0 6px 16px rgba(120,0,0,.25)}
+.pickup img{width:48px;height:48px;border-radius:8px;object-fit:cover}
+.pickup .name{color:var(--red);font-size:15px;font-weight:900;white-space:nowrap}
+.pickup.show{animation:pick 1.3s ease-out forwards}
+@keyframes pick{0%{transform:translateX(130%);opacity:0}15%{transform:none;opacity:1}80%{transform:none;opacity:1}100%{transform:translateX(130%);opacity:0}}
 .toast{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(26,20,20,.88);color:#fff;font-family:var(--font-display);font-weight:700;font-size:15px;padding:7px 16px;border-radius:999px;opacity:0;transition:opacity .3s;max-width:90%;text-align:center}
 .toast.show{opacity:1}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,243,240,.93);padding:16px;pointer-events:auto}
@@ -115,7 +116,7 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
 @media (max-width:640px),(max-height:520px){ /* small phones portrait, and any phone in landscape */
   .cart{left:6px;top:5px;padding:3px 5px;gap:3px} .cart .lbl{font-size:12px} .slot{width:20px;height:20px;border-radius:4px;border-width:1.5px} #slots{gap:2px!important}
   .stats{right:6px;top:5px;gap:4px} .stat{font-size:12px;padding:2px 6px;border-width:1.5px;gap:3px} .stat .k{font-size:8px} .life{width:10px;height:12px}
-  .pickup img{width:84px;height:84px;border-width:3px} .pickup .name{font-size:14px;padding:3px 10px}
+  .pickup{top:32px;right:6px;padding:3px 8px 3px 3px;gap:6px} .pickup img{width:32px;height:32px;border-radius:6px} .pickup .name{font-size:12px}
   .toast{font-size:12px;padding:5px 10px;bottom:6%}
 }
 .rotate-hint{display:none;margin:8px 0 0;text-align:center;font:700 13px var(--font-display);color:var(--muted)}
@@ -126,7 +127,7 @@ footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-co
   .top{font-size:11px;gap:6px} .top .links{gap:10px} .top .tools button{font-size:11px;padding:4px 9px}
   .brandbar{gap:10px;padding:8px 0} .logo-img{height:44px} .slogan{font-size:14px}
   .nav{font-size:13px} .nav button,.nav a{padding:9px 11px;gap:6px} .nav-logo{display:none}
-  .stats{top:34px}
+  .stats{top:34px} .pickup{top:62px}
   .overlay{position:fixed;inset:0;z-index:50;padding:12px;background:rgba(255,243,240,.97)}
   .panel{padding:14px 14px 18px} .panel h1{font-size:26px} .panel p{font-size:14px} .thumbs img{width:30px;height:30px} .btn{font-size:18px;padding:9px 22px}
   .receipt{padding:10px 12px 18px} .receipt .line{font-size:13px}
